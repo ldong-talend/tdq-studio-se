@@ -12,6 +12,8 @@
 // ============================================================================
 package org.talend.dataprofiler.core.ui.utils;
 
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -19,10 +21,18 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.talend.commons.emf.FactoriesUtil;
 import org.talend.commons.utils.SpecialValueDisplay;
 import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
+import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
+import org.talend.dataprofiler.core.ui.editor.preview.model.dataset.CustomerDefaultBAWDataset;
+import org.talend.dataprofiler.core.ui.events.DynamicBAWChartEventReceiver;
+import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
+import org.talend.dataprofiler.core.ui.events.EventEnum;
+import org.talend.dataprofiler.core.ui.events.EventManager;
+import org.talend.dataprofiler.core.ui.events.EventReceiver;
 import org.talend.dataquality.analysis.AnalysisResult;
 import org.talend.dataquality.indicators.BenfordLawFrequencyIndicator;
 import org.talend.dataquality.indicators.CountsIndicator;
@@ -31,6 +41,7 @@ import org.talend.dataquality.indicators.IndicatorParameters;
 import org.talend.dataquality.indicators.RowCountIndicator;
 import org.talend.dq.indicators.ext.FrequencyExt;
 import org.talend.dq.indicators.preview.table.ChartDataEntity;
+import org.talend.dq.nodes.indicator.type.IndicatorEnum;
 import org.talend.resource.EResourceConstant;
 import org.talend.resource.ResourceManager;
 import org.talend.resource.ResourceService;
@@ -162,4 +173,50 @@ public class AnalysisUtils {
         }
         return tempFreq;
     }
+
+    /**
+     * create a DynamicChart Event Receiver.
+     * 
+     * @param categoryDataset
+     * @param index
+     * @param oneIndicator
+     * @return
+     */
+    public static DynamicChartEventReceiver createDynamicChartEventReceiver(CategoryDataset categoryDataset, int index,
+            Indicator oneIndicator) {
+        DynamicChartEventReceiver eReceiver = new DynamicChartEventReceiver();
+        eReceiver.setDataset(categoryDataset);
+        eReceiver.setIndexInDataset(index);
+        eReceiver.setIndicatorName(oneIndicator.getName());
+
+        eReceiver.setIndicator(oneIndicator);
+        // clear data
+        eReceiver.clearValue();
+        return eReceiver;
+    }
+
+    /**
+     * DOC yyin Comment method "createDynamicBAWChartEventReceiver".
+     * 
+     * @param oneCategoryIndicatorModel
+     * @param categoryDataset
+     * @return
+     */
+    public static DynamicBAWChartEventReceiver createDynamicBAWChartEventReceiver(
+            DynamicIndicatorModel oneCategoryIndicatorModel, CategoryDataset categoryDataset,
+            Map<Indicator, EventReceiver> eventReceivers) {
+        DynamicBAWChartEventReceiver bawReceiver = new DynamicBAWChartEventReceiver();
+        bawReceiver.setBawDataset((CustomerDefaultBAWDataset) categoryDataset);
+        bawReceiver.setBAWparentComposite(oneCategoryIndicatorModel.getBawParentChartComp());
+
+        for (Indicator oneIndicator : oneCategoryIndicatorModel.getSummaryIndicators()) {
+            DynamicChartEventReceiver eReceiver = bawReceiver.createEventReceiver(
+                    IndicatorEnum.findIndicatorEnum(oneIndicator.eClass()), oneIndicator);
+            eventReceivers.put(oneIndicator, eReceiver);
+            EventManager.getInstance().register(oneIndicator, EventEnum.DQ_DYMANIC_CHART, eReceiver);
+        }
+        bawReceiver.clearValue();
+        return bawReceiver;
+    }
+
 }

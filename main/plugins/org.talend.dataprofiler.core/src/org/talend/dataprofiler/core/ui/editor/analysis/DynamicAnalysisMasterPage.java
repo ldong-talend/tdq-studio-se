@@ -46,10 +46,10 @@ import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.EventEnum;
 import org.talend.dataprofiler.core.ui.events.EventManager;
 import org.talend.dataprofiler.core.ui.events.EventReceiver;
+import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataquality.analysis.Analysis;
 import org.talend.dataquality.indicators.Indicator;
 import org.talend.dq.analysis.AnalysisHandler;
-import org.talend.dq.nodes.indicator.type.IndicatorEnum;
 
 /**
  * DOC yyin class global comment. Detailled comment
@@ -236,30 +236,17 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
             CategoryDataset categoryDataset = oneCategoryIndicatorModel.getDataset();
             if (categoryDataset instanceof CustomerDefaultBAWDataset) {
                 // when all summary indicators are selected
-                DynamicBAWChartEventReceiver bawReceiver = new DynamicBAWChartEventReceiver();
-                bawReceiver.setBawDataset((CustomerDefaultBAWDataset) categoryDataset);
-                bawReceiver.setBAWparentComposite(oneCategoryIndicatorModel.getBawParentChartComp());
+                DynamicBAWChartEventReceiver bawReceiver = AnalysisUtils.createDynamicBAWChartEventReceiver(
+                        oneCategoryIndicatorModel, categoryDataset, eventReceivers);
                 bawReceiver.setChartComposite(chartComposite);
-                for (Indicator oneIndicator : oneCategoryIndicatorModel.getSummaryIndicators()) {
-                    DynamicChartEventReceiver eReceiver = bawReceiver.createEventReceiver(
-                            IndicatorEnum.findIndicatorEnum(oneIndicator.eClass()), oneIndicator);
-                    registerIndicatorEvent(oneIndicator, eReceiver);
-                }
-                bawReceiver.clearValue();
                 // register the parent baw receiver with one of summary indicator, no need to handle baw actually
                 registerIndicatorEvent(oneCategoryIndicatorModel.getSummaryIndicators().get(0), bawReceiver);
             } else {
                 int index = 0;
                 for (Indicator oneIndicator : oneCategoryIndicatorModel.getIndicatorList()) {
-                    DynamicChartEventReceiver eReceiver = new DynamicChartEventReceiver();
-                    eReceiver.setDataset(categoryDataset);
-                    eReceiver.setIndexInDataset(index++);
-                    eReceiver.setIndicatorName(oneIndicator.getName());
+                    DynamicChartEventReceiver eReceiver = AnalysisUtils.createDynamicChartEventReceiver(categoryDataset, index++,
+                            oneIndicator);
                     eReceiver.setChartComposite(chartComposite);
-                    eReceiver.setIndicator(oneIndicator);
-                    // clear data
-                    eReceiver.clearValue();
-
                     registerIndicatorEvent(oneIndicator, eReceiver);
                 }
             }

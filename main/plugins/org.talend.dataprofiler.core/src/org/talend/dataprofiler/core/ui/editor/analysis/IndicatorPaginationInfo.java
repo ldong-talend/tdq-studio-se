@@ -145,9 +145,8 @@ public abstract class IndicatorPaginationInfo extends PaginationInfo {
                 if (unit.getIndicator().getRealValue() != null && "null".equals(unit.getIndicator().getRealValue())) {//$NON-NLS-1$
                     continue;
                 }
-            } else {
-                indicators.add(unit.getIndicator());
             }
+            indicators.add(unit.getIndicator());
         }
         return indicators;
     }
