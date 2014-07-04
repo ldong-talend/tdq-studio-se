@@ -52,6 +52,7 @@ import org.talend.dataprofiler.core.CorePlugin;
 import org.talend.dataprofiler.core.PluginConstant;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.model.ModelElementIndicator;
+import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
 import org.talend.dataprofiler.core.ui.chart.TalendChartComposite;
 import org.talend.dataprofiler.core.ui.editor.analysis.drilldown.DrillDownEditorInput;
 import org.talend.dataprofiler.core.ui.editor.preview.CompositeIndicator;
@@ -98,7 +99,7 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
 
     @Override
     protected void render() {
-        clearAllMaps();
+        clearDynamicList();
         indicatorTableMap.clear();
         for (final ModelElementIndicator modelElementIndicator : modelElementIndicators) {
 
@@ -196,10 +197,16 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
             dataset = chartTypeState.getDataset();
         }
 
-        // Added TDQ-8787 2014-06-18 yyin: add the current units and dataset into the map
+        // Added TDQ-8787 2014-06-18 yyin: add the current units and dataset into the list
         List<Indicator> indicators = null;
+        DynamicIndicatorModel dyModel = new DynamicIndicatorModel();
+        dyModel.setDataset(dataset);
+        dyModel.setChartType(chartType);
+        this.dynamicList.add(dyModel);
+
         if (chart != null) {
-            indicators = putDatasetMap(chartType, units, dataset);
+            indicators = getIndicators(units);
+            dyModel.setIndicatorList(indicators);
         }
         ChartWithData chartData = new ChartWithData(chartType, chart, ((ICustomerDataset) dataset).getDataEntities());
 
@@ -224,10 +231,9 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
         tableviewer.setInput(chartData);
         if (EIndicatorChartType.SUMMARY_STATISTICS.equals(chartType)) {
             // for the summary indicators, the table show 2 more than the bar chart
-            indicatorTableMap.put(getIndicatorsForTable(units, true), tableviewer);
-        } else {
-            indicatorTableMap.put(indicators, tableviewer);
+            dyModel.setSummaryIndicators(getIndicatorsForTable(units, true));
         }
+        dyModel.setTableViewer(tableviewer);
 
         DataExplorer dataExplorer = chartTypeState.getDataExplorer();
         ChartTableFactory.addMenuAndTip(tableviewer, dataExplorer, analysis);
@@ -236,7 +242,7 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
             ChartComposite cc = new TalendChartComposite(composite, SWT.NONE, chart, true);
             if (EIndicatorChartType.SUMMARY_STATISTICS.equals(chartType)) {
                 // for summary indicators: need to record the chart composite, which is used for create BAW chart
-                this.BAWparentComposite.put(indicators, (TalendChartComposite) cc);
+                dyModel.setBawParentChartComp((TalendChartComposite) cc);
             }
 
             GridData gd = new GridData();

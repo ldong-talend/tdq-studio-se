@@ -38,8 +38,8 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.jfree.data.category.CategoryDataset;
 import org.talend.dataprofiler.core.ImageLib;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
+import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
 import org.talend.dataprofiler.core.ui.action.actions.RunAnalysisAction;
-import org.talend.dataprofiler.core.ui.chart.TalendChartComposite;
 import org.talend.dataprofiler.core.ui.editor.preview.model.dataset.CustomerDefaultBAWDataset;
 import org.talend.dataprofiler.core.ui.events.DynamicBAWChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
@@ -229,28 +229,28 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
         createDynamicChartsBeforeRun();
 
         // get all indicators and datasets
-        Map<List<Indicator>, CategoryDataset> indiAndDatasets = getDynamicDatasets();
+        List<DynamicIndicatorModel> indiAndDatasets = getDynamicDatasets();
 
         // register dynamic event,for the indicator (for each column)
-        for (List<Indicator> oneCategoryIndicators : indiAndDatasets.keySet()) {
-            CategoryDataset categoryDataset = indiAndDatasets.get(oneCategoryIndicators);
+        for (DynamicIndicatorModel oneCategoryIndicatorModel : indiAndDatasets) {
+            CategoryDataset categoryDataset = oneCategoryIndicatorModel.getDataset();
             if (categoryDataset instanceof CustomerDefaultBAWDataset) {
                 // when all summary indicators are selected
                 DynamicBAWChartEventReceiver bawReceiver = new DynamicBAWChartEventReceiver();
                 bawReceiver.setBawDataset((CustomerDefaultBAWDataset) categoryDataset);
-                bawReceiver.setBAWparentComposite(getBAWparentComposite().get(oneCategoryIndicators));
+                bawReceiver.setBAWparentComposite(oneCategoryIndicatorModel.getBawParentChartComp());
                 bawReceiver.setChartComposite(chartComposite);
-                for (Indicator oneIndicator : oneCategoryIndicators) {
+                for (Indicator oneIndicator : oneCategoryIndicatorModel.getSummaryIndicators()) {
                     DynamicChartEventReceiver eReceiver = bawReceiver.createEventReceiver(
                             IndicatorEnum.findIndicatorEnum(oneIndicator.eClass()), oneIndicator);
                     registerIndicatorEvent(oneIndicator, eReceiver);
                 }
                 bawReceiver.clearValue();
                 // register the parent baw receiver with one of summary indicator, no need to handle baw actually
-                registerIndicatorEvent(oneCategoryIndicators.get(0), bawReceiver);
+                registerIndicatorEvent(oneCategoryIndicatorModel.getSummaryIndicators().get(0), bawReceiver);
             } else {
                 int index = 0;
-                for (Indicator oneIndicator : oneCategoryIndicators) {
+                for (Indicator oneIndicator : oneCategoryIndicatorModel.getIndicatorList()) {
                     DynamicChartEventReceiver eReceiver = new DynamicChartEventReceiver();
                     eReceiver.setDataset(categoryDataset);
                     eReceiver.setIndexInDataset(index++);
@@ -331,9 +331,7 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
     }
 
     // should be implemented in child classes
-    abstract public Map<List<Indicator>, CategoryDataset> getDynamicDatasets();
-
-    abstract public Map<List<Indicator>, TalendChartComposite> getBAWparentComposite();
+    abstract public List<DynamicIndicatorModel> getDynamicDatasets();
 
     public void clearDynamicDatasets() {
         // make the run button workable again

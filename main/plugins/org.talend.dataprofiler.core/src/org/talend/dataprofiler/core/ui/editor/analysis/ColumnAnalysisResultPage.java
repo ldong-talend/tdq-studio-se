@@ -32,6 +32,7 @@ import org.jfree.data.category.CategoryDataset;
 import org.talend.dataprofiler.core.PluginConstant;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.model.ModelElementIndicator;
+import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
 import org.talend.dataprofiler.core.ui.editor.preview.model.dataset.CustomerDefaultBAWDataset;
 import org.talend.dataprofiler.core.ui.events.DynamicBAWChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
@@ -200,31 +201,29 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
         createFormContent(getManagedForm());
 
         // get all indicators and datasets
-        Map<List<Indicator>, CategoryDataset> indicatorAndDataset = uiPagination.getAllIndcatorAndDatasetOfCurrentPage();
-        Map<List<Indicator>, TableViewer> indicatorAndTable = uiPagination.getAllIndicatorAndTable();
+        List<DynamicIndicatorModel> indiAndDatasets = uiPagination.getAllIndcatorAndDatasetOfCurrentPage();
+
         // register dynamic event,for the indicator (for each column)
-        for (List<Indicator> oneCategoryIndicators : indicatorAndDataset.keySet()) {
-            CategoryDataset categoryDataset = indicatorAndDataset.get(oneCategoryIndicators);
-            TableViewer tableViewer = indicatorAndTable.get(oneCategoryIndicators);
+        for (DynamicIndicatorModel oneCategoryIndicatorModel : indiAndDatasets) {
+            CategoryDataset categoryDataset = oneCategoryIndicatorModel.getDataset();
+            TableViewer tableViewer = oneCategoryIndicatorModel.getTableViewer();
             if (categoryDataset instanceof CustomerDefaultBAWDataset) {
                 // when all summary indicators are selected
                 DynamicBAWChartEventReceiver bawReceiver = new DynamicBAWChartEventReceiver();
                 bawReceiver.setBawDataset((CustomerDefaultBAWDataset) categoryDataset);
-                bawReceiver.setBAWparentComposite(uiPagination.getBAWparentComposite().get(oneCategoryIndicators));
+                bawReceiver.setBAWparentComposite(oneCategoryIndicatorModel.getBawParentChartComp());
                 bawReceiver.setChartComposite(chartComposite);
-                for (Indicator oneIndicator : oneCategoryIndicators) {
+                for (Indicator oneIndicator : oneCategoryIndicatorModel.getSummaryIndicators()) {
                     DynamicChartEventReceiver eReceiver = bawReceiver.createEventReceiver(
                             IndicatorEnum.findIndicatorEnum(oneIndicator.eClass()), oneIndicator);
                     registerIndicatorEvent(oneIndicator, eReceiver);
                 }
                 bawReceiver.clearValue();
                 // register the parent baw receiver with one of summary indicator, no need to handle baw actually
-                registerIndicatorEvent(oneCategoryIndicators.get(0), bawReceiver);
+                registerIndicatorEvent(oneCategoryIndicatorModel.getSummaryIndicators().get(0), bawReceiver);
             } else {
                 int index = 0;
-                // ChartDataEntity[] entities = ((CustomerDefaultCategoryDataset) categoryDataset).getDataEntities();
-                for (Indicator oneIndicator : oneCategoryIndicators) {
-                    // for (ChartDataEntity entity : entities) {
+                for (Indicator oneIndicator : oneCategoryIndicatorModel.getIndicatorList()) {
                     DynamicChartEventReceiver eReceiver = new DynamicChartEventReceiver();
                     eReceiver.setDataset(categoryDataset);
                     eReceiver.setIndexInDataset(index++);

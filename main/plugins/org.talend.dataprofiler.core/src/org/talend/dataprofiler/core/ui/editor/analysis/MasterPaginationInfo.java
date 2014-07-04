@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -28,13 +29,17 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.talend.dataprofiler.common.ui.editor.preview.chart.ChartDecorator;
+import org.talend.dataprofiler.core.PluginConstant;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.model.ModelElementIndicator;
+import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
+import org.talend.dataprofiler.core.ui.chart.TalendChartComposite;
 import org.talend.dataprofiler.core.ui.editor.composite.AnalysisColumnTreeViewer;
 import org.talend.dataprofiler.core.ui.editor.preview.CompositeIndicator;
 import org.talend.dataprofiler.core.ui.editor.preview.IndicatorUnit;
 import org.talend.dataprofiler.core.ui.editor.preview.model.ChartTypeStatesOperator;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates;
+import org.talend.dataprofiler.core.ui.editor.preview.model.states.SummaryStatisticsState;
 import org.talend.dataprofiler.core.ui.utils.pagination.UIPagination;
 import org.talend.dataquality.indicators.Indicator;
 import org.talend.dq.indicators.preview.EIndicatorChartType;
@@ -75,7 +80,7 @@ public class MasterPaginationInfo extends IndicatorPaginationInfo {
             return;
         }
         previewChartList.clear();
-        clearAllMaps();
+        clearDynamicList();
         for (final ModelElementIndicator modelElementIndicator : modelElementIndicators) {
             ExpandableComposite exComp = uiPagination.getToolkit().createExpandableComposite(uiPagination.getChartComposite(),
                     ExpandableComposite.TREE_NODE | ExpandableComposite.CLIENT_INDENT);
@@ -144,11 +149,29 @@ public class MasterPaginationInfo extends IndicatorPaginationInfo {
         if (EIndicatorChartType.BENFORD_LAW_STATISTICS.equals(chartType)) {
             dataset = plot.getDataset(1);
         }
-        List<Indicator> indicators = putDatasetMap(chartType, units, dataset);
+        List<Indicator> indicators = getIndicators(units);
+        DynamicIndicatorModel dyModel = new DynamicIndicatorModel();
+        if (EIndicatorChartType.SUMMARY_STATISTICS.equals(chartType)) {
+            if (units.size() == SummaryStatisticsState.FULL_FLAG) {
+                indicators = getIndicatorsForTable(units, false);
+                dyModel.setSummaryIndicators(indicators);
+            }
+        }
+        dyModel.setIndicatorList(indicators);
+        dyModel.setDataset(dataset);
+        dyModel.setChartType(chartType);
+        this.dynamicList.add(dyModel);
 
-            final ChartComposite chartComp = createTalendChartComposite(comp, chartType, chart, indicators);
-
-            addListenerToChartComp(chartComp, chartTypeState);
+        final ChartComposite chartComp = new TalendChartComposite(comp, SWT.NONE, chart, true);
+        if (EIndicatorChartType.SUMMARY_STATISTICS.equals(chartType)) {
+            // for summary indicators: need to record the chart composite, which is used for create BAW chart
+            dyModel.setBawParentChartComp((TalendChartComposite) chartComp);
+        }
+        GridData gd = new GridData();
+        gd.widthHint = PluginConstant.CHART_STANDARD_WIDHT;
+        gd.heightHint = PluginConstant.CHART_STANDARD_HEIGHT;
+        chartComp.setLayoutData(gd);
+        addListenerToChartComp(chartComp, chartTypeState);
 
     }
 

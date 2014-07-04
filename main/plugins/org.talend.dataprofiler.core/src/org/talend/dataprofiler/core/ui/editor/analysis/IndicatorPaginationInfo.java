@@ -13,10 +13,7 @@
 package org.talend.dataprofiler.core.ui.editor.analysis;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.swt.SWT;
@@ -24,30 +21,23 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
-import org.jfree.chart.JFreeChart;
-import org.jfree.data.category.CategoryDataset;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.talend.commons.exception.ExceptionHandler;
-import org.talend.dataprofiler.core.PluginConstant;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.model.ModelElementIndicator;
+import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
 import org.talend.dataprofiler.core.ui.chart.ChartUtils;
-import org.talend.dataprofiler.core.ui.chart.TalendChartComposite;
 import org.talend.dataprofiler.core.ui.editor.preview.IndicatorUnit;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates;
-import org.talend.dataprofiler.core.ui.editor.preview.model.states.SummaryStatisticsState;
 import org.talend.dataprofiler.core.ui.pref.EditorPreferencePage;
 import org.talend.dataprofiler.core.ui.utils.pagination.PaginationInfo;
 import org.talend.dataprofiler.core.ui.utils.pagination.UIPagination;
 import org.talend.dataquality.indicators.Indicator;
-import org.talend.dq.indicators.preview.EIndicatorChartType;
 import org.talend.dq.nodes.indicator.type.IndicatorEnum;
 
 /**
@@ -61,9 +51,13 @@ public abstract class IndicatorPaginationInfo extends PaginationInfo {
     protected List<? extends ModelElementIndicator> modelElementIndicators;
 
     // Added TDQ-8787 20140617 yyin : store the temp indicator and its related dataset between one running
-    protected Map<List<Indicator>, CategoryDataset> indicatorDatasetMap = new IdentityHashMap<List<Indicator>, CategoryDataset>();
+    protected List<DynamicIndicatorModel> dynamicList = new ArrayList<DynamicIndicatorModel>();
 
-    protected Map<List<Indicator>, TalendChartComposite> BAWparentComposite = new HashMap<List<Indicator>, TalendChartComposite>();
+    // protected Map<List<Indicator>, CategoryDataset> indicatorDatasetMap = new IdentityHashMap<List<Indicator>,
+    // CategoryDataset>();
+
+    // protected Map<List<Indicator>, TalendChartComposite> BAWparentComposite = new HashMap<List<Indicator>,
+    // TalendChartComposite>();
 
     public IndicatorPaginationInfo(ScrolledForm form, List<? extends ModelElementIndicator> modelElementIndicators,
             UIPagination uiPagination) {
@@ -158,63 +152,14 @@ public abstract class IndicatorPaginationInfo extends PaginationInfo {
         return indicators;
     }
 
-    public Map<List<Indicator>, CategoryDataset> getIndicatorDatasetMap() {
-        return this.indicatorDatasetMap;
+    public List<DynamicIndicatorModel> getDynamicIndicatorList() {
+        return this.dynamicList;
     }
 
-    /**
-     * remember the parent composite for summary indicator's BAW chart.
-     * 
-     * @return the bAWparentComposite
-     */
-    public Map<List<Indicator>, TalendChartComposite> getBAWparentComposite() {
-        return this.BAWparentComposite;
-    }
-
-    /**
-     * create a TalendChartComposite for current chart.
-     * 
-     * @param comp
-     * @param chartType
-     * @param chart
-     * @param indicators
-     * @return
-     */
-    protected ChartComposite createTalendChartComposite(Composite comp, EIndicatorChartType chartType, JFreeChart chart,
-            List<Indicator> indicators) {
-        final ChartComposite chartComp = new TalendChartComposite(comp, SWT.NONE, chart, true);
-        if (EIndicatorChartType.SUMMARY_STATISTICS.equals(chartType)) {
-            // for summary indicators: need to record the chart composite, which is used for create BAW chart
-            this.BAWparentComposite.put(indicators, (TalendChartComposite) chartComp);
+    public void clearDynamicList() {
+        for (DynamicIndicatorModel dyModel : dynamicList) {
+            dyModel.clear();
         }
-        GridData gd = new GridData();
-        gd.widthHint = PluginConstant.CHART_STANDARD_WIDHT;
-        gd.heightHint = PluginConstant.CHART_STANDARD_HEIGHT;
-        chartComp.setLayoutData(gd);
-        return chartComp;
-    }
-
-    /**
-     * for common indicator: just get them from unit for summary indicator: if select all, get all, if not select all,
-     * filter IRQ and range indicator.
-     * 
-     * @param chartType
-     * @param units
-     * @param dataset
-     */
-    protected List<Indicator> putDatasetMap(EIndicatorChartType chartType, List<IndicatorUnit> units, CategoryDataset dataset) {
-        List<Indicator> indicators = getIndicators(units);
-        if (EIndicatorChartType.SUMMARY_STATISTICS.equals(chartType)) {
-            if (units.size() == SummaryStatisticsState.FULL_FLAG) {
-                indicators = getIndicatorsForTable(units, false);
-            }
-        }
-        indicatorDatasetMap.put(indicators, dataset);
-        return indicators;
-    }
-
-    protected void clearAllMaps() {
-        BAWparentComposite.clear();
-        indicatorDatasetMap.clear();
+        dynamicList.clear();
     }
 }
