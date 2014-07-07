@@ -236,17 +236,7 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
     private List<CategoryDataset> getOptimizeShowDataset() {
         List<CategoryDataset> result = new ArrayList<CategoryDataset>();
         // get the page size
-        String dqruleSize = EditorPreferencePage.getDQRuleSize();
-        int maxSize = 999999;
-        int size = maxSize;
-        try {
-            size = Integer.parseInt(dqruleSize);
-            if (size < 1) {
-                size = maxSize;
-            }
-        } catch (NumberFormatException e) {
-            size = maxSize;
-        }
+        int size = getSizeOfDQRulePerChart();
 
         // Add RowCountIndicator dataset
         CustomerDefaultCategoryDataset customerDatasetRownCount = new CustomerDefaultCategoryDataset();
@@ -275,6 +265,54 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
         // TDQ-5119~
 
         return result;
+    }
+
+    /**
+     * DOC yyin Comment method "getSizeOfDQRule".
+     * 
+     * @return
+     */
+    public static int getSizeOfDQRulePerChart() {
+        String dqruleSize = EditorPreferencePage.getDQRuleSize();
+        int maxSize = 999999;
+        int size = maxSize;
+        try {
+            size = Integer.parseInt(dqruleSize);
+            if (size < 1) {
+                size = maxSize;
+            }
+        } catch (NumberFormatException e) {
+            size = maxSize;
+        }
+        return size;
+    }
+
+    public List<List<Indicator>> getPagedIndicators() {
+        int size = getSizeOfDQRulePerChart();
+
+        List<List<Indicator>> indicatorList = new ArrayList<List<Indicator>>();
+        // first , add row count indicator
+        List<Indicator> rowInd = new ArrayList<Indicator>();
+        rowInd.add(getRownCountUnit(units).getIndicator());
+        indicatorList.add(rowInd);
+
+        // then, add all where rules(one chart <--> one list)
+        List<TableIndicatorUnit> whereRuleUnits = removeRowCountUnit(units);
+        int totalNum = whereRuleUnits.size();
+        int pageNum = totalNum % size == 0 ? totalNum / size : totalNum / size + 1;
+        for (int i = 0; i < pageNum; i++) {
+            List<Indicator> rules = new ArrayList<Indicator>();
+            for (int j = 0; j < size; ++j) {
+                int index = i * size + j;
+                if (index < totalNum) {
+                    rules.add(whereRuleUnits.get(index).getIndicator());
+                } else {
+                    break;
+                }
+            }
+            indicatorList.add(rules);
+        }
+        return indicatorList;
     }
 
     /**

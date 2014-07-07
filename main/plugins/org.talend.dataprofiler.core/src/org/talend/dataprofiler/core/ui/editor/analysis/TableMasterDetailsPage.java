@@ -74,7 +74,9 @@ import org.talend.dataprofiler.core.ui.editor.preview.CompositeIndicator;
 import org.talend.dataprofiler.core.ui.editor.preview.TableIndicatorUnit;
 import org.talend.dataprofiler.core.ui.editor.preview.model.ChartTypeStatesOperator;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates;
+import org.talend.dataprofiler.core.ui.editor.preview.model.states.WhereRuleStatisticsStateTable;
 import org.talend.dataprofiler.core.ui.pref.EditorPreferencePage;
+import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataquality.analysis.Analysis;
 import org.talend.dataquality.analysis.ExecutionLanguage;
 import org.talend.dataquality.domain.Domain;
@@ -104,11 +106,6 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
 
     TableAnalysisHandler analysisHandler;
 
-    @Override
-    public TableAnalysisHandler getAnalysisHandler() {
-        return analysisHandler;
-    }
-
     private TableIndicator[] currentTableIndicators;
 
     private String stringDataFilter;
@@ -117,28 +114,12 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
 
     private Composite[] previewChartCompsites;
 
-    public Composite[] getPreviewChartCompsites() {
-        // ADD msjian TDQ-6213 2012-12-18: filter the disposed composite
-        if (previewChartList != null && !previewChartList.isEmpty()) {
-            List<ExpandableComposite> withOutDisposed = new ArrayList<ExpandableComposite>();
-            for (ExpandableComposite com : previewChartList) {
-                if (!com.isDisposed()) {
-                    withOutDisposed.add(com);
-                }
-            }
-            this.previewChartCompsites = withOutDisposed.toArray(new ExpandableComposite[withOutDisposed.size()]);
-        }
-        // TDQ-6213~
-        return previewChartCompsites;
-    }
-
-    public void setPreviewChartCompsites(Composite[] previewChartCompsites) {
-        this.previewChartCompsites = previewChartCompsites;
-    }
-
     private Section analysisTableSection = null;
 
     private List<ExpandableComposite> previewChartList = null;
+
+    // Added TDQ-8787 20140617 yyin : store the temp indicator and its related dataset between one running
+    protected List<DynamicIndicatorModel> dynamicList = new ArrayList<DynamicIndicatorModel>();
 
     /**
      * DOC xqliu TableMasterDetailsPage constructor comment.
@@ -355,6 +336,7 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
     @Override
     public void createPreviewCharts(final ScrolledForm form, final Composite composite) {
         previewChartList = new ArrayList<ExpandableComposite>();
+        dynamicList.clear();
         for (final TableIndicator tableIndicator : this.treeViewer.getTableIndicator()) {
             final NamedColumnSet set = tableIndicator.getColumnSet();
             ExpandableComposite exComp = toolkit.createExpandableComposite(composite, ExpandableComposite.TREE_NODE
@@ -393,8 +375,19 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
 
                                         List<JFreeChart> charts = chartTypeState.getChartList();
                                         if (charts != null) {
+                                            // get all indicator lists separated by chart, and only
+                                            // WhereRuleStatisticsStateTable can get not-null charts
+                                            List<List<Indicator>> pagedIndicators = ((WhereRuleStatisticsStateTable) chartTypeState)
+                                                    .getPagedIndicators();
+                                            int index = 0;
+
                                             for (JFreeChart chart : charts) {
                                                 final ChartComposite chartComp = new ChartComposite(comp, SWT.NONE, chart, true);
+                                                // Added TDQ-8787 20140707 yyin: create and store the dynamic model
+                                                DynamicIndicatorModel dyModel = AnalysisUtils.createDynamicModel(chartType,
+                                                        pagedIndicators.get(index++), chart);
+                                                dynamicList.add(dyModel);
+                                                // ~
 
                                                 GridData gd = new GridData();
                                                 gd.widthHint = 550;
@@ -472,9 +465,42 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
         });
     }
 
+    /**
+     * get the indicators from the units, filter the range and IQR type, For the chart
+     * 
+     * @param units
+     * @return
+     */
+    private List<Indicator> getIndicators(List<TableIndicatorUnit> units) {
+        List<Indicator> indicators = new ArrayList<Indicator>();
+        for (TableIndicatorUnit indicatorunit : units) {
+            indicators.add(indicatorunit.getIndicator());
+        }
+        return indicators;
+    }
+
     @Override
     public Composite getChartComposite() {
         return chartComposite;
+    }
+
+    public Composite[] getPreviewChartCompsites() {
+        // ADD msjian TDQ-6213 2012-12-18: filter the disposed composite
+        if (previewChartList != null && !previewChartList.isEmpty()) {
+            List<ExpandableComposite> withOutDisposed = new ArrayList<ExpandableComposite>();
+            for (ExpandableComposite com : previewChartList) {
+                if (!com.isDisposed()) {
+                    withOutDisposed.add(com);
+                }
+            }
+            this.previewChartCompsites = withOutDisposed.toArray(new ExpandableComposite[withOutDisposed.size()]);
+        }
+        // TDQ-6213~
+        return previewChartCompsites;
+    }
+
+    public void setPreviewChartCompsites(Composite[] previewChartCompsites) {
+        this.previewChartCompsites = previewChartCompsites;
     }
 
     @Override
@@ -608,6 +634,11 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
         }
     }
 
+    @Override
+    public TableAnalysisHandler getAnalysisHandler() {
+        return analysisHandler;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -625,12 +656,12 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
 
     @Override
     String getExpandString() {
-        return DefaultMessagesImpl.getString("TableMasterDetailsPage.expandAllTables");
+        return DefaultMessagesImpl.getString("TableMasterDetailsPage.expandAllTables"); //$NON-NLS-1$
     }
 
     @Override
     String getCollapseAllString() {
-        return DefaultMessagesImpl.getString("TableMasterDetailsPage.collapseAllTables");
+        return DefaultMessagesImpl.getString("TableMasterDetailsPage.collapseAllTables");//$NON-NLS-1$
     }
 
     /*
@@ -641,7 +672,7 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
     @Override
     public List<DynamicIndicatorModel> getDynamicDatasets() {
 
-        return null;
+        return dynamicList;
     }
 
 }

@@ -53,12 +53,6 @@ public abstract class IndicatorPaginationInfo extends PaginationInfo {
     // Added TDQ-8787 20140617 yyin : store the temp indicator and its related dataset between one running
     protected List<DynamicIndicatorModel> dynamicList = new ArrayList<DynamicIndicatorModel>();
 
-    // protected Map<List<Indicator>, CategoryDataset> indicatorDatasetMap = new IdentityHashMap<List<Indicator>,
-    // CategoryDataset>();
-
-    // protected Map<List<Indicator>, TalendChartComposite> BAWparentComposite = new HashMap<List<Indicator>,
-    // TalendChartComposite>();
-
     public IndicatorPaginationInfo(ScrolledForm form, List<? extends ModelElementIndicator> modelElementIndicators,
             UIPagination uiPagination) {
         super(form, modelElementIndicators, uiPagination);
@@ -125,7 +119,12 @@ public abstract class IndicatorPaginationInfo extends PaginationInfo {
         return modelElementIndicators;
     }
 
-    // for the chart: do not add IQR and range.
+    /**
+     * get the indicators from the units, filter the range and IQR type, For the chart
+     * 
+     * @param units
+     * @return
+     */
     protected List<Indicator> getIndicators(List<IndicatorUnit> units) {
         List<Indicator> indicators = new ArrayList<Indicator>();
         for (IndicatorUnit indicatorunit : units) {
@@ -137,7 +136,13 @@ public abstract class IndicatorPaginationInfo extends PaginationInfo {
         return indicators;
     }
 
-    // for the table
+    /**
+     * get the indicator for the table, which will show alls, different from the chart
+     * 
+     * @param units
+     * @param filterNull
+     * @return
+     */
     protected List<Indicator> getIndicatorsForTable(List<IndicatorUnit> units, boolean filterNull) {
         List<Indicator> indicators = new ArrayList<Indicator>();
         for (IndicatorUnit unit : units) {

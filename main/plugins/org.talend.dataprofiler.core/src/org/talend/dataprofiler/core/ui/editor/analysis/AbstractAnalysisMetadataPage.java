@@ -117,17 +117,6 @@ public abstract class AbstractAnalysisMetadataPage extends AbstractMetadataFormP
 
     // ~Execute Engine section
 
-    public AnalysisRepNode getAnalysisRepNode() {
-        return this.analysisRepNode;
-    }
-
-    private void initAnalysisRepNode(Analysis analysis) {
-        RepositoryNode recursiveFind = RepositoryNodeHelper.recursiveFind(analysis);
-        if (recursiveFind != null && recursiveFind instanceof AnalysisRepNode) {
-            this.analysisRepNode = (AnalysisRepNode) recursiveFind;
-        }
-    }
-
     protected AnalysisEditor currentEditor = null;
 
     // MOD yyin 201204 TDQ-4977, change to TableCombo type to show the connection type.
@@ -136,14 +125,6 @@ public abstract class AbstractAnalysisMetadataPage extends AbstractMetadataFormP
     protected Text textConnVersion;
 
     protected Label labelConnDeleted;
-
-    public TableCombo getConnCombo() {
-        return connCombo;
-    }
-
-    public Analysis getAnalysis() {
-        return analysisItem.getAnalysis();
-    }
 
     public AbstractAnalysisMetadataPage(FormEditor editor, String id, String title) {
         super(editor, id, title);
@@ -167,6 +148,17 @@ public abstract class AbstractAnalysisMetadataPage extends AbstractMetadataFormP
         return analysis;
     }
 
+    public AnalysisRepNode getAnalysisRepNode() {
+        return this.analysisRepNode;
+    }
+
+    private void initAnalysisRepNode(Analysis analysis) {
+        RepositoryNode recursiveFind = RepositoryNodeHelper.recursiveFind(analysis);
+        if (recursiveFind != null && recursiveFind instanceof AnalysisRepNode) {
+            this.analysisRepNode = (AnalysisRepNode) recursiveFind;
+        }
+    }
+
     protected IRepositoryNode getCurrentRepNodeOnUI() {
         // MOD klliu 2010-12-10
         IRepositoryNode connectionNode = null;
@@ -176,6 +168,14 @@ public abstract class AbstractAnalysisMetadataPage extends AbstractMetadataFormP
             connectionNode = fileEditorInput.getConnectionNode();
         }
         return connectionNode;
+    }
+
+    public TableCombo getConnCombo() {
+        return connCombo;
+    }
+
+    public Analysis getAnalysis() {
+        return analysisItem.getAnalysis();
     }
 
     @Override

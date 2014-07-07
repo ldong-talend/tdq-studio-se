@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.dataprofiler.core.ui.utils;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -21,6 +22,8 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.talend.commons.emf.FactoriesUtil;
@@ -40,6 +43,7 @@ import org.talend.dataquality.indicators.Indicator;
 import org.talend.dataquality.indicators.IndicatorParameters;
 import org.talend.dataquality.indicators.RowCountIndicator;
 import org.talend.dq.indicators.ext.FrequencyExt;
+import org.talend.dq.indicators.preview.EIndicatorChartType;
 import org.talend.dq.indicators.preview.table.ChartDataEntity;
 import org.talend.dq.nodes.indicator.type.IndicatorEnum;
 import org.talend.resource.EResourceConstant;
@@ -217,6 +221,31 @@ public class AnalysisUtils {
         }
         bawReceiver.clearValue();
         return bawReceiver;
+    }
+
+    /**
+     * create a Dynamic Model for one category of indicators, who related to the same chart.
+     * 
+     * @param chartType
+     * @param indicators
+     * @param chart
+     * @return
+     */
+    public static DynamicIndicatorModel createDynamicModel(EIndicatorChartType chartType, List<Indicator> indicators,
+            JFreeChart chart) {
+        // one dataset <--> several indicators in same category
+        CategoryPlot plot = chart.getCategoryPlot();
+        CategoryDataset dataset = plot.getDataset();
+        // Added TDQ-8787 20140612 : store the dataset, and the index of the current indicator
+        if (EIndicatorChartType.BENFORD_LAW_STATISTICS.equals(chartType)) {
+            dataset = plot.getDataset(1);
+        }
+        DynamicIndicatorModel dyModel = new DynamicIndicatorModel();
+
+        dyModel.setIndicatorList(indicators);
+        dyModel.setDataset(dataset);
+        dyModel.setChartType(chartType);
+        return dyModel;
     }
 
 }

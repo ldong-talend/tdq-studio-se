@@ -25,8 +25,6 @@ import org.eclipse.ui.forms.events.ExpansionEvent;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.data.category.CategoryDataset;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.talend.dataprofiler.common.ui.editor.preview.chart.ChartDecorator;
 import org.talend.dataprofiler.core.PluginConstant;
@@ -40,6 +38,7 @@ import org.talend.dataprofiler.core.ui.editor.preview.IndicatorUnit;
 import org.talend.dataprofiler.core.ui.editor.preview.model.ChartTypeStatesOperator;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.SummaryStatisticsState;
+import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataprofiler.core.ui.utils.pagination.UIPagination;
 import org.talend.dataquality.indicators.Indicator;
 import org.talend.dq.indicators.preview.EIndicatorChartType;
@@ -142,24 +141,14 @@ public class MasterPaginationInfo extends IndicatorPaginationInfo {
         }
         ChartDecorator.decorate(chart, null);
 
-        // one dataset <--> several indicators in same category
-        CategoryPlot plot = chart.getCategoryPlot();
-        CategoryDataset dataset = plot.getDataset();
-        // Added TDQ-8787 20140612 : store the dataset, and the index of the current indicator
-        if (EIndicatorChartType.BENFORD_LAW_STATISTICS.equals(chartType)) {
-            dataset = plot.getDataset(1);
-        }
         List<Indicator> indicators = getIndicators(units);
-        DynamicIndicatorModel dyModel = new DynamicIndicatorModel();
+        DynamicIndicatorModel dyModel = AnalysisUtils.createDynamicModel(chartType, indicators, chart);
         if (EIndicatorChartType.SUMMARY_STATISTICS.equals(chartType)) {
-            if (units.size() == SummaryStatisticsState.FULL_FLAG) {
+            if (indicators.size() == SummaryStatisticsState.FULL_FLAG) {
                 indicators = getIndicatorsForTable(units, false);
                 dyModel.setSummaryIndicators(indicators);
             }
         }
-        dyModel.setIndicatorList(indicators);
-        dyModel.setDataset(dataset);
-        dyModel.setChartType(chartType);
         this.dynamicList.add(dyModel);
 
         final ChartComposite chartComp = new TalendChartComposite(comp, SWT.NONE, chart, true);
