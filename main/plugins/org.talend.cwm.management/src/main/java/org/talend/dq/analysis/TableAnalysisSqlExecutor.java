@@ -29,6 +29,8 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.swt.widgets.Display;
+import org.talend.core.ITDQRepositoryService;
 import org.talend.core.model.metadata.builder.database.ExtractMetaDataUtils;
 import org.talend.cwm.db.connection.ConnectionUtils;
 import org.talend.cwm.exception.AnalysisExecutionException;
@@ -54,6 +56,8 @@ import org.talend.dataquality.rules.JoinElement;
 import org.talend.dataquality.rules.RulesPackage;
 import org.talend.dataquality.rules.WhereRule;
 import org.talend.dq.dbms.DbmsLanguage;
+import org.talend.dq.helper.AnalysisExecutorHelper;
+import org.talend.dq.indicators.IndicatorCommonUtil;
 import org.talend.utils.collections.MultiMapHelper;
 import org.talend.utils.sugars.ReturnCode;
 import org.talend.utils.sugars.TypedReturnCode;
@@ -309,7 +313,7 @@ public class TableAnalysisSqlExecutor extends TableAnalysisExecutor {
 
             // execute the sql statement for each indicator
             Collection<Indicator> indicators = IndicatorHelper.getIndicatorLeaves(analysis.getResults());
-            for (Indicator indicator : indicators) {
+            for (final Indicator indicator : indicators) {
                 // skip composite indicators that do not require a sql execution
                 if (indicator instanceof CompositeIndicator) {
                     // options of composite indicators are handled elsewhere
@@ -343,6 +347,19 @@ public class TableAnalysisSqlExecutor extends TableAnalysisExecutor {
                     continue;
                 }
                 indicator.setComputed(true);
+
+                // Added TDQ-8787 publish the related event when one indicator is finished: to refresh the chart with
+                // new result
+                // of the current indicator
+                final ITDQRepositoryService tdqRepositoryService = AnalysisExecutorHelper.getTDQService();
+                if (tdqRepositoryService != null) {
+                    Display.getDefault().asyncExec(new Runnable() {
+
+                        public void run() {
+                            tdqRepositoryService.publishDynamicEvent(indicator, IndicatorCommonUtil.getIndicatorValue(indicator));
+                        }
+                    });
+                }// ~
 
                 // add mapping of analyzed elements to their indicators
                 MultiMapHelper.addUniqueObjectToListMap(indicator.getAnalyzedElement(), indicator, elementToIndicator);
