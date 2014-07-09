@@ -47,12 +47,7 @@ public abstract class AbstractChartTypeStatesTable implements IChartTypeStates {
 
     public AbstractChartTypeStatesTable(List<TableIndicatorUnit> units) {
         Iterator<TableIndicatorUnit> it = units.iterator();
-        while (it.hasNext()) {
-            TableIndicatorUnit unit = it.next();
-            // if (!unit.isExcuted()) {
-            // it.remove();
-            // }
-        }
+        // remove if executed check, TDQ-8787, for dynamic chart
         if (units != null) {
             this.units.addAll(units);
         }
