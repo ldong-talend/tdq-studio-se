@@ -49,9 +49,9 @@ public abstract class AbstractChartTypeStatesTable implements IChartTypeStates {
         Iterator<TableIndicatorUnit> it = units.iterator();
         while (it.hasNext()) {
             TableIndicatorUnit unit = it.next();
-            if (!unit.isExcuted()) {
-                it.remove();
-            }
+            // if (!unit.isExcuted()) {
+            // it.remove();
+            // }
         }
         if (units != null) {
             this.units.addAll(units);

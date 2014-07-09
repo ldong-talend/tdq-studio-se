@@ -55,6 +55,7 @@ import org.talend.dataprofiler.core.ui.editor.analysis.AnalysisEditor;
 import org.talend.dataprofiler.core.ui.editor.analysis.AnalysisItemEditorInput;
 import org.talend.dataprofiler.core.ui.editor.analysis.ColumnAnalysisResultPage;
 import org.talend.dataprofiler.core.ui.editor.analysis.DynamicAnalysisMasterPage;
+import org.talend.dataprofiler.core.ui.editor.analysis.TableAnalysisResultPage;
 import org.talend.dataprofiler.core.ui.events.EventEnum;
 import org.talend.dataprofiler.core.ui.events.EventManager;
 import org.talend.dataquality.analysis.AnalysisType;
@@ -272,12 +273,14 @@ public class RunAnalysisAction extends Action implements ICheatSheetAction {
         ExecutionLanguage executionEngine = AnalysisHelper.getExecutionEngine(this.item.getAnalysis());
         if (ExecutionLanguage.SQL.equals(executionEngine)) {
             if (listener == null) {// when run from context menu.
-                if (AnalysisType.MULTIPLE_COLUMN.equals(item.getAnalysis().getParameters().getAnalysisType())) {
+                if (AnalysisType.MULTIPLE_COLUMN.equals(item.getAnalysis().getParameters().getAnalysisType())
+                        || AnalysisType.BUSINESS_RULE.equals(item.getAnalysis().getParameters().getAnalysisType())) {
                     return true;
                 }
                 return false;
             } else {
-                return listener instanceof DynamicAnalysisMasterPage || listener instanceof ColumnAnalysisResultPage;
+                return listener instanceof DynamicAnalysisMasterPage || listener instanceof ColumnAnalysisResultPage
+                        || listener instanceof TableAnalysisResultPage;
             }
         } else {
             return false;

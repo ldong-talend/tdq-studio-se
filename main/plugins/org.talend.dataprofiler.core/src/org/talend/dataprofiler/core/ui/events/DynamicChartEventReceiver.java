@@ -38,7 +38,7 @@ public class DynamicChartEventReceiver extends EventReceiver {
 
     private DefaultCategoryDataset dataset;
 
-    private Indicator indicator;
+    protected Indicator indicator;
 
     private int entityIndex;
 
@@ -68,6 +68,51 @@ public class DynamicChartEventReceiver extends EventReceiver {
         if (indicator instanceof FrequencyIndicator || UDIHelper.isFrequency(indicator)) {
             this.indicator = indicator;
         }
+    }
+
+    /**
+     * Getter for dataset.
+     * 
+     * @return the dataset
+     */
+    public DefaultCategoryDataset getDataset() {
+        return this.dataset;
+    }
+
+    /**
+     * Sets the dataset.
+     * 
+     * @param dataset the dataset to set
+     */
+    public void setDataset(DefaultCategoryDataset dataset) {
+        this.dataset = dataset;
+    }
+
+    /**
+     * Getter for entityIndex.
+     * 
+     * @return the entityIndex
+     */
+    public int getEntityIndex() {
+        return this.entityIndex;
+    }
+
+    /**
+     * Sets the entityIndex.
+     * 
+     * @param entityIndex the entityIndex to set
+     */
+    public void setEntityIndex(int entityIndex) {
+        this.entityIndex = entityIndex;
+    }
+
+    /**
+     * Getter for indicator.
+     * 
+     * @return the indicator
+     */
+    public Indicator getIndicator() {
+        return this.indicator;
     }
 
     @Override
@@ -104,23 +149,23 @@ public class DynamicChartEventReceiver extends EventReceiver {
                 ((CustomerDefaultCategoryDataset) dataset).setValue(
                         (Number) StringFormatUtil.format(indValue, StringFormatUtil.NUMBER), indicatorName, indicatorName);
             }
-
-            if (tableViewer != null) {
-                if (indValue instanceof FrequencyExt[]) {
-                    ChartWithData input = (ChartWithData) tableViewer.getInput();
-                    if (input != null) {
-                        input.setEntities(((ICustomerDataset) dataset).getDataEntities());
-                    }
-                    tableViewer.getTable().clearAll();
-                    tableViewer.setInput(input);
-                } else {
-                    refreshTable(String.valueOf(indValue));
-                }
-            }
-
-            // need to refresh the parent composite of the chart to show the changes
-            EventManager.getInstance().publish(chartComposite, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART, null);
         }
+        if (tableViewer != null) {
+            if (indValue instanceof FrequencyExt[]) {
+                ChartWithData input = (ChartWithData) tableViewer.getInput();
+                if (input != null) {
+                    input.setEntities(((ICustomerDataset) dataset).getDataEntities());
+                }
+                tableViewer.getTable().clearAll();
+                tableViewer.setInput(input);
+            } else {
+                refreshTable(String.valueOf(indValue));
+            }
+        }
+
+        // need to refresh the parent composite of the chart to show the changes
+        EventManager.getInstance().publish(chartComposite, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART, null);
+
         return true;
     }
 
@@ -133,13 +178,15 @@ public class DynamicChartEventReceiver extends EventReceiver {
         }
     }
 
-    private void refreshTable(String value) {
+    public void refreshTable(String value) {
         ChartWithData input = (ChartWithData) tableViewer.getInput();
         if (input != null) {
             ChartDataEntity[] dataEntities = input.getEnity();
-            dataEntities[entityIndex].setValue(value);
-            tableViewer.getTable().clearAll();
-            tableViewer.setInput(input);
+            if (dataEntities != null && dataEntities.length > entityIndex) {
+                dataEntities[entityIndex].setValue(value);
+                tableViewer.getTable().clearAll();
+                tableViewer.setInput(input);
+            }
         }
     }
 

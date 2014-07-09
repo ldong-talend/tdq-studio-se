@@ -97,8 +97,8 @@ public class AnalysisEditor extends CommonFormEditor {
     // Added TDQ-8787 2014-06-16 yyin
     private EventReceiver registerDynamicEvent = null;
 
-    private EventReceiver unRegisterDynamicEvent=null;
-    
+    private EventReceiver unRegisterDynamicEvent = null;
+
     private boolean isRefreshResultPage = false;
 
     /**
@@ -502,8 +502,12 @@ public class AnalysisEditor extends CommonFormEditor {
                         ((DynamicAnalysisMasterPage) masterPage).registerDynamicEvent();
                     } else {
                         // register result page
-                        if (resultPage != null && resultPage instanceof ColumnAnalysisResultPage) {
-                            ((ColumnAnalysisResultPage) resultPage).registerDynamicEvent();
+                        if (resultPage != null) {
+                            if (resultPage instanceof ColumnAnalysisResultPage) {
+                                ((ColumnAnalysisResultPage) resultPage).registerDynamicEvent();
+                            } else if (resultPage instanceof TableAnalysisResultPage) {
+                                ((TableAnalysisResultPage) resultPage).registerDynamicEvent();
+                            }
                         }
                     }
                     return true;
@@ -520,8 +524,12 @@ public class AnalysisEditor extends CommonFormEditor {
                         ((DynamicAnalysisMasterPage) masterPage).unRegisterDynamicEvent();
                     } else {
                         // register result page
-                        if (resultPage != null && resultPage instanceof ColumnAnalysisResultPage) {
-                            ((ColumnAnalysisResultPage) resultPage).unRegisterDynamicEvent();
+                        if (resultPage != null) {
+                            if (resultPage instanceof ColumnAnalysisResultPage) {
+                                ((ColumnAnalysisResultPage) resultPage).unRegisterDynamicEvent();
+                            } else if (resultPage instanceof TableAnalysisResultPage) {
+                                ((TableAnalysisResultPage) resultPage).unRegisterDynamicEvent();
+                            }
                         }
                     }
                     return true;

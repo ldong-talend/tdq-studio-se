@@ -16,6 +16,8 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,6 +47,7 @@ import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.entity.CategoryItemEntity;
 import org.jfree.chart.entity.ChartEntity;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.cwm.helper.SwitchHelpers;
@@ -53,6 +56,7 @@ import org.talend.dataprofiler.core.CorePlugin;
 import org.talend.dataprofiler.core.PluginConstant;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.model.TableIndicator;
+import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
 import org.talend.dataprofiler.core.ui.editor.composite.AbstractPagePart;
 import org.talend.dataprofiler.core.ui.editor.composite.AnalysisTableTreeViewer;
 import org.talend.dataprofiler.core.ui.editor.preview.CompositeIndicator;
@@ -64,7 +68,13 @@ import org.talend.dataprofiler.core.ui.editor.preview.model.ChartWithData;
 import org.talend.dataprofiler.core.ui.editor.preview.model.MenuItemEntity;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.WhereRuleStatisticsStateTable;
+import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
+import org.talend.dataprofiler.core.ui.events.EventEnum;
+import org.talend.dataprofiler.core.ui.events.EventManager;
+import org.talend.dataprofiler.core.ui.events.EventReceiver;
+import org.talend.dataprofiler.core.ui.events.TableDynamicChartEventReceiver;
 import org.talend.dataprofiler.core.ui.pref.EditorPreferencePage;
+import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataquality.analysis.Analysis;
 import org.talend.dataquality.indicators.Indicator;
 import org.talend.dq.analysis.AnalysisHandler;
@@ -72,6 +82,7 @@ import org.talend.dq.analysis.explore.DataExplorer;
 import org.talend.dq.analysis.explore.IDataExplorer;
 import org.talend.dq.indicators.preview.EIndicatorChartType;
 import org.talend.dq.indicators.preview.table.ChartDataEntity;
+import org.talend.dq.nodes.indicator.type.IndicatorEnum;
 import orgomg.cwm.resource.relational.NamedColumnSet;
 
 /**
@@ -88,6 +99,15 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
     AnalysisTableTreeViewer tableTreeViewer;
 
     private Section resultSection = null;
+
+    // Added TDQ-8787 20140617 yyin : store the temp indicator and its related dataset between one running
+    private List<DynamicIndicatorModel> dynamicList = new ArrayList<DynamicIndicatorModel>();
+
+    private Map<Indicator, EventReceiver> eventReceivers = new IdentityHashMap<Indicator, EventReceiver>();
+
+    private EventReceiver registerDynamicRefreshEvent;
+
+    private Composite sectionClient;
 
     /**
      * DOC xqliu TableAnalysisResultPage constructor comment.
@@ -129,10 +149,11 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
         // ~
 
         resultSection = createSection(form, parent, DefaultMessagesImpl.getString("TableAnalysisResultPage.analysisResult"), null); //$NON-NLS-1$
-        Composite sectionClient = toolkit.createComposite(resultSection);
+        sectionClient = toolkit.createComposite(resultSection);
         sectionClient.setLayout(new GridLayout());
         sectionClient.setLayoutData(new GridData(GridData.FILL_BOTH));
 
+        dynamicList.clear();
         for (final TableIndicator tableIndicator : tableTreeViewer.getTableIndicator()) {
 
             ExpandableComposite exComp = toolkit.createExpandableComposite(sectionClient, ExpandableComposite.TWISTIE
@@ -231,6 +252,17 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
                                         tableviewerRowCount.setInput(chartDataRowCount);
                                         DataExplorer dataExplorerRownCount = chartTypeState.getDataExplorer();
                                         ChartTableFactory.addMenuAndTip(tableviewerRowCount, dataExplorerRownCount, analysis);
+
+                                        // Added TDQ-8787 20140707 yyin: create and store the dynamic model for row
+                                        // count's table
+                                        List<Indicator> rowCount = new ArrayList<Indicator>();
+                                        rowCount.add(chartTypeStateWhereRule.getRownCountUnit(units).getIndicator());
+                                        DynamicIndicatorModel dyModel = AnalysisUtils.createDynamicModel(chartType, rowCount,
+                                                null);
+                                        dyModel.setTableViewer(tableviewerRowCount);
+
+                                        dynamicList.add(dyModel);
+                                        // ~
                                     }
 
                                     // create table for WhereRuleIndicator
@@ -238,6 +270,23 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
                                     tableviewer.setInput(chartData);
                                     DataExplorer dataExplorer = chartTypeState.getDataExplorer();
                                     ChartTableFactory.addMenuAndTip(tableviewer, dataExplorer, analysis);
+
+                                    // Added TDQ-8787 20140707 yyin: create and store the dynamic model for all dq
+                                    // rules's table
+                                    if (chartTypeState instanceof WhereRuleStatisticsStateTable) {
+                                        List<Indicator> allRules = new ArrayList<Indicator>();
+                                        List<TableIndicatorUnit> removeRowCountUnit = ((WhereRuleStatisticsStateTable) chartTypeState)
+                                                .removeRowCountUnit(units);
+                                        for (TableIndicatorUnit indUnit : removeRowCountUnit) {
+                                            allRules.add(indUnit.getIndicator());
+                                        }
+                                        DynamicIndicatorModel dyModel = AnalysisUtils.createDynamicModel(chartType, allRules,
+                                                null);
+                                        dyModel.setTableViewer(tableviewer);
+
+                                        dynamicList.add(dyModel);
+                                    }
+                                    // ~
 
                                     Composite chartTopComp = toolkit.createComposite(composite, SWT.NULL);
                                     chartTopComp.setLayout(new GridLayout(1, false));
@@ -247,11 +296,21 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
                                         // create chart
                                         List<JFreeChart> charts = chartTypeState.getChartList();
                                         if (charts != null) {
+                                            // get all indicator lists separated by chart, and only
+                                            // WhereRuleStatisticsStateTable can get not-null charts
+                                            List<List<Indicator>> pagedIndicators = ((WhereRuleStatisticsStateTable) chartTypeState)
+                                                    .getPagedIndicators();
+                                            int index = 0;
                                             for (JFreeChart chart2 : charts) {
 
                                                 ChartComposite chartComp = new ChartComposite(chartTopComp, SWT.NONE, chart2,
                                                         true);
-
+                                                // Added TDQ-8787 20140707 yyin: create and store the dynamic model for
+                                                // each chart
+                                                DynamicIndicatorModel dyModel = AnalysisUtils.createDynamicModel(chartType,
+                                                        pagedIndicators.get(index++), chart2);
+                                                dynamicList.add(dyModel);
+                                                // ~
                                                 GridData gd = new GridData();
                                                 gd.widthHint = 550;
                                                 gd.heightHint = 250;
@@ -312,6 +371,17 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
     public void refresh(AbstractAnalysisMetadataPage masterPage) {
         this.masterPage = (TableMasterDetailsPage) masterPage;
 
+        disposeComposite();
+
+        createFormContent(getManagedForm());
+        masterPage.refresh();
+
+    }
+
+    /**
+     * DOC yyin Comment method "disposeComposite".
+     */
+    private void disposeComposite() {
         if (summaryComp != null && !summaryComp.isDisposed()) {
             summaryComp.dispose();
         }
@@ -319,10 +389,6 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
         if (resultComp != null && !resultComp.isDisposed()) {
             resultComp.dispose();
         }
-
-        createFormContent(getManagedForm());
-        masterPage.refresh();
-
     }
 
     @Override
@@ -406,4 +472,83 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
 
         });
     }
+
+    /**
+     * Added TDQ-8787 20140613 yyin: create all charts before running, register each chart with its related indicator.
+     */
+    public void registerDynamicEvent() {
+        disposeComposite();
+        createFormContent(getManagedForm());
+        System.err.println("table result register");
+        // register dynamic event,for the indicator (for each column)
+        for (DynamicIndicatorModel oneCategoryIndicatorModel : dynamicList) {
+            CategoryDataset categoryDataset = oneCategoryIndicatorModel.getDataset();
+            TableViewer tableViewer = oneCategoryIndicatorModel.getTableViewer();
+            int index = 0;
+            for (Indicator oneIndicator : oneCategoryIndicatorModel.getIndicatorList()) {
+                TableDynamicChartEventReceiver eReceiver = new TableDynamicChartEventReceiver();
+                eReceiver.setDataset(categoryDataset);
+                eReceiver.setIndexInDataset(index++);
+                eReceiver.setIndicatorName(oneIndicator.getName());
+                eReceiver.setIndicator(oneIndicator);
+                eReceiver.setIndicatorType(IndicatorEnum.findIndicatorEnum(oneIndicator.eClass()));
+                eReceiver.setChartComposite(sectionClient);
+                eReceiver.setTableViewer(tableViewer);
+                // clear data
+                eReceiver.clearValue();
+
+                registerIndicatorEvent(oneIndicator, eReceiver);
+            }
+        }
+        reLayoutChartComposite();
+
+        registerRefreshDynamicChartEvent();
+    }
+
+    private void registerIndicatorEvent(Indicator oneIndicator, DynamicChartEventReceiver eReceiver) {
+        eventReceivers.put(oneIndicator, eReceiver);
+        EventManager.getInstance().register(oneIndicator, EventEnum.DQ_DYMANIC_CHART, eReceiver);
+    }
+
+    public void reLayoutChartComposite() {
+        sectionClient.getParent().layout();
+        sectionClient.layout();
+    }
+
+    /**
+     * refresh the composite of the chart, to show the changes on the chart.
+     */
+    private void registerRefreshDynamicChartEvent() {
+        registerDynamicRefreshEvent = new EventReceiver() {
+
+            @Override
+            public boolean handle(Object data) {
+                reLayoutChartComposite();
+                return true;
+            }
+        };
+        EventManager.getInstance().register(sectionClient, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART,
+                registerDynamicRefreshEvent);
+    }
+
+    /**
+     * unregister every dynamic events which registered before executing analysis
+     * 
+     * @param eventReceivers
+     */
+    public void unRegisterDynamicEvent() {
+        for (Indicator oneIndicator : eventReceivers.keySet()) {
+            DynamicChartEventReceiver eventReceiver = (DynamicChartEventReceiver) eventReceivers.get(oneIndicator);
+            eventReceiver.clear();
+            EventManager.getInstance().unRegister(oneIndicator, EventEnum.DQ_DYMANIC_CHART, eventReceiver);
+        }
+        eventReceivers.clear();
+        EventManager.getInstance().unRegister(sectionClient, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART,
+                registerDynamicRefreshEvent);
+
+        dynamicList.clear();
+
+        masterPage.clearDynamicDatasets();
+    }
+
 }

@@ -56,6 +56,7 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.cwm.helper.ConnectionHelper;
@@ -75,6 +76,8 @@ import org.talend.dataprofiler.core.ui.editor.preview.TableIndicatorUnit;
 import org.talend.dataprofiler.core.ui.editor.preview.model.ChartTypeStatesOperator;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.WhereRuleStatisticsStateTable;
+import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
+import org.talend.dataprofiler.core.ui.events.TableDynamicChartEventReceiver;
 import org.talend.dataprofiler.core.ui.pref.EditorPreferencePage;
 import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataquality.analysis.Analysis;
@@ -86,6 +89,7 @@ import org.talend.dq.analysis.TableAnalysisHandler;
 import org.talend.dq.helper.EObjectHelper;
 import org.talend.dq.helper.RepositoryNodeHelper;
 import org.talend.dq.indicators.preview.EIndicatorChartType;
+import org.talend.dq.nodes.indicator.type.IndicatorEnum;
 import org.talend.dq.writer.impl.ElementWriterFactory;
 import org.talend.repository.model.IRepositoryNode;
 import org.talend.repository.model.RepositoryNode;
@@ -119,7 +123,7 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
     private List<ExpandableComposite> previewChartList = null;
 
     // Added TDQ-8787 20140617 yyin : store the temp indicator and its related dataset between one running
-    protected List<DynamicIndicatorModel> dynamicList = new ArrayList<DynamicIndicatorModel>();
+    private List<DynamicIndicatorModel> dynamicList = new ArrayList<DynamicIndicatorModel>();
 
     /**
      * DOC xqliu TableMasterDetailsPage constructor comment.
@@ -673,6 +677,25 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
     public List<DynamicIndicatorModel> getDynamicDatasets() {
 
         return dynamicList;
+    }
+
+    @Override
+    public void clearDynamicDatasets() {
+        super.clearDynamicDatasets();
+        this.dynamicList.clear();
+    }
+
+    @Override
+    protected DynamicChartEventReceiver createEventReceiver(CategoryDataset categoryDataset, int index, Indicator oneIndicator) {
+        TableDynamicChartEventReceiver eReceiver = new TableDynamicChartEventReceiver();
+        eReceiver.setDataset(categoryDataset);
+        eReceiver.setIndexInDataset(index++);
+        eReceiver.setIndicatorName(oneIndicator.getName());
+        eReceiver.setIndicator(oneIndicator);
+        eReceiver.setIndicatorType(IndicatorEnum.findIndicatorEnum(oneIndicator.eClass()));
+        // clear data
+        eReceiver.clearValue();
+        return eReceiver;
     }
 
 }

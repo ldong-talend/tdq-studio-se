@@ -61,9 +61,9 @@ import orgomg.cwm.objectmodel.core.TaggedValue;
  */
 public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable {
 
-    private static final String ROW_KEY_PASS = DefaultMessagesImpl.getString("WhereRuleStatisticsStateTable.match"); //$NON-NLS-1$
+    public static final String ROW_KEY_PASS = DefaultMessagesImpl.getString("WhereRuleStatisticsStateTable.match"); //$NON-NLS-1$
 
-    private static final String ROW_KEY_NOT_PASS = DefaultMessagesImpl.getString("WhereRuleStatisticsStateTable.notMatch"); //$NON-NLS-1$
+    public static final String ROW_KEY_NOT_PASS = DefaultMessagesImpl.getString("WhereRuleStatisticsStateTable.notMatch"); //$NON-NLS-1$
 
     private TableIndicator tableIndicator;
 
@@ -321,7 +321,7 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
      * @param units
      * @return
      */
-    private List<TableIndicatorUnit> removeRowCountUnit(List<TableIndicatorUnit> units) {
+    public List<TableIndicatorUnit> removeRowCountUnit(List<TableIndicatorUnit> units) {
         List<TableIndicatorUnit> result = new ArrayList<TableIndicatorUnit>();
         for (TableIndicatorUnit tiu : units) {
             if (!IndicatorEnum.RowCountIndicatorEnum.equals(tiu.getType())) {
@@ -337,7 +337,7 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
      * @param units
      * @return
      */
-    private TableIndicatorUnit getRownCountUnit(List<TableIndicatorUnit> units) {
+    public TableIndicatorUnit getRownCountUnit(List<TableIndicatorUnit> units) {
         for (TableIndicatorUnit tiu : units) {
             if (IndicatorEnum.RowCountIndicatorEnum.equals(tiu.getType())) {
                 return tiu;
@@ -355,19 +355,20 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
     private void addDataEntity2CustomerDataset(CustomerDefaultCategoryDataset customerDataset, TableIndicatorUnit unit) {
         if (IndicatorEnum.WhereRuleIndicatorEnum.equals(unit.getType())) {
             // Added TDQ-7547 20140107 yyin: when the value is null, no need to proceed
-            if (unit.getValue() == null) {
-                return;
-            }// ~
+            // if (unit.getValue() == null) {
+            // return;
+            // }// ~
             String columnKey = unit.getIndicatorName();
-            double value = Double.parseDouble(unit.getValue().toString());
-            customerDataset.addValue(unit.geIndicatorCount() - value, ROW_KEY_NOT_PASS, columnKey);
+            double value = unit.getValue() == null ? Double.NaN : Double.parseDouble(unit.getValue().toString());
+            double valueNotM = unit.getValue() == null ? Double.NaN : unit.geIndicatorCount() - value;
+            customerDataset.addValue(valueNotM, ROW_KEY_NOT_PASS, columnKey);
             customerDataset.addValue(value, ROW_KEY_PASS, columnKey);
 
             WhereRuleChartDataEntity entity = new WhereRuleChartDataEntity();
             entity.setIndicator(unit.getIndicator());
             entity.setLabel(columnKey);
             entity.setNumMatch(String.valueOf(value));
-            entity.setNumNoMatch(String.valueOf(unit.geIndicatorCount() - value));
+            entity.setNumNoMatch(String.valueOf(valueNotM));
             // ADD xqliu 2010-03-10 feature 10834
             entity.setToolTip(getUnitToolTip(unit));
             // ~
@@ -474,8 +475,10 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
 
                 Indicator indicator = ((WhereRuleChartDataEntity) element).getIndicator();
 
-                if (IndicatorHelper.isWhereRuleIndicatorNotAide(indicator)) {
-                    largeThanRowCount = getRowCount() < ((WhereRuleIndicator) indicator).getUserCount();
+                if (!Double.isNaN(Double.parseDouble(((WhereRuleChartDataEntity) element).getNumMatch()))) {
+                    if (IndicatorHelper.isWhereRuleIndicatorNotAide(indicator)) {
+                        largeThanRowCount = getRowCount() < ((WhereRuleIndicator) indicator).getUserCount();
+                    }
                 }
 
                 if (3 == columnIndex && largeThanRowCount) {
@@ -495,9 +498,11 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
 
                 Indicator indicator = ((WhereRuleChartDataEntity) element).getIndicator();
 
-                // MOD yyin 20121031 TDQ-6194, when: match+no match>row count, highlight
-                if (IndicatorHelper.isWhereRuleIndicatorNotAide(indicator)) {
-                    largeThanRowCount = getRowCount() < ((WhereRuleIndicator) indicator).getCount();
+                if (!Double.isNaN(Double.parseDouble(((WhereRuleChartDataEntity) element).getNumMatch()))) {
+                    // MOD yyin 20121031 TDQ-6194, when: match+no match>row count, highlight
+                    if (IndicatorHelper.isWhereRuleIndicatorNotAide(indicator)) {
+                        largeThanRowCount = getRowCount() < ((WhereRuleIndicator) indicator).getCount();
+                    }
                 }
 
                 if ((3 == columnIndex || 4 == columnIndex) && largeThanRowCount) {

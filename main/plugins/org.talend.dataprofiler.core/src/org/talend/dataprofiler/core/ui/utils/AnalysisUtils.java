@@ -233,17 +233,19 @@ public class AnalysisUtils {
      */
     public static DynamicIndicatorModel createDynamicModel(EIndicatorChartType chartType, List<Indicator> indicators,
             JFreeChart chart) {
-        // one dataset <--> several indicators in same category
-        CategoryPlot plot = chart.getCategoryPlot();
-        CategoryDataset dataset = plot.getDataset();
-        // Added TDQ-8787 20140612 : store the dataset, and the index of the current indicator
-        if (EIndicatorChartType.BENFORD_LAW_STATISTICS.equals(chartType)) {
-            dataset = plot.getDataset(1);
-        }
         DynamicIndicatorModel dyModel = new DynamicIndicatorModel();
 
+        // one dataset <--> several indicators in same category
+        if (chart != null) {
+            CategoryPlot plot = chart.getCategoryPlot();
+            CategoryDataset dataset = plot.getDataset();
+            // Added TDQ-8787 20140612 : store the dataset, and the index of the current indicator
+            if (EIndicatorChartType.BENFORD_LAW_STATISTICS.equals(chartType)) {
+                dataset = plot.getDataset(1);
+            }
+            dyModel.setDataset(dataset);
+        }
         dyModel.setIndicatorList(indicators);
-        dyModel.setDataset(dataset);
         dyModel.setChartType(chartType);
         return dyModel;
     }

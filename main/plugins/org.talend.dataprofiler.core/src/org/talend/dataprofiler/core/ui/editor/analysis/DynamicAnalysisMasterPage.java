@@ -244,8 +244,7 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
             } else {
                 int index = 0;
                 for (Indicator oneIndicator : oneCategoryIndicatorModel.getIndicatorList()) {
-                    DynamicChartEventReceiver eReceiver = AnalysisUtils.createDynamicChartEventReceiver(categoryDataset, index++,
-                            oneIndicator);
+                    DynamicChartEventReceiver eReceiver = createEventReceiver(categoryDataset, index, oneIndicator);
                     eReceiver.setChartComposite(chartComposite);
                     registerIndicatorEvent(oneIndicator, eReceiver);
                 }
@@ -254,6 +253,18 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
         reLayoutChartComposite();
 
         registerRefreshDynamicChartEvent();
+    }
+
+    /**
+     * DOC yyin Comment method "createEventReceiver".
+     * 
+     * @param categoryDataset
+     * @param index
+     * @param oneIndicator
+     * @return
+     */
+    protected DynamicChartEventReceiver createEventReceiver(CategoryDataset categoryDataset, int index, Indicator oneIndicator) {
+        return AnalysisUtils.createDynamicChartEventReceiver(categoryDataset, index++, oneIndicator);
     }
 
     private void registerIndicatorEvent(Indicator oneIndicator, DynamicChartEventReceiver eReceiver) {
