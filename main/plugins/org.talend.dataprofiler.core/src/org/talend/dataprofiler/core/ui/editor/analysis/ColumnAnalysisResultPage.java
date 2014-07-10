@@ -275,6 +275,9 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
         uiPagination.clearAllDynamicMapOfCurrentPage();
 
         masterPage.clearDynamicDatasets();
+
+        // TDQ-9173, need to refresh the summary part after each dynamic running
+        refreshSummaryContent();
     }
 
 }

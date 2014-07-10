@@ -23,6 +23,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Table;
@@ -99,6 +100,18 @@ public abstract class AbstractAnalysisResultPage extends AbstractFormPage implem
 
     protected Section summarySection = null;
 
+    // Added TDQ-8787, TDQ-9173: need to refresh the related label in summary part, after each running (after change to
+    // dynamic)
+    private Label executeDateLabel = null;
+
+    private Label executeDurationLabel = null;
+
+    private Label executeResultLabel = null;
+
+    private Label executeNumberLabel = null;
+
+    private Label executeOkNumberLabel = null;
+
     public AbstractAnalysisResultPage(FormEditor editor, String id, String title) {
         super(editor, id, title);
         currentEditor = (CommonFormEditor) editor;
@@ -121,11 +134,11 @@ public abstract class AbstractAnalysisResultPage extends AbstractFormPage implem
     protected void createSummarySection(ScrolledForm form, Composite parent, AnalysisHandler analysisHandler) {
         summarySection = createSection(form, parent,
                 DefaultMessagesImpl.getString("AbstractAnalysisResultPage.analysisSummary"), null); //$NON-NLS-1$
-        Composite sectionClient = toolkit.createComposite(summarySection);
-        sectionClient.setLayout(new GridLayout(2, false));
-        sectionClient.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        Composite summarySectionClient = toolkit.createComposite(summarySection);
+        summarySectionClient.setLayout(new GridLayout(2, false));
+        summarySectionClient.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        Composite databaseComp = toolkit.createComposite(sectionClient);
+        Composite databaseComp = toolkit.createComposite(summarySectionClient);
         databaseComp.setLayout(new GridLayout(2, false));
         GridData databaseCompData = new GridData(GridData.FILL_HORIZONTAL);
         databaseCompData.verticalAlignment = GridData.BEGINNING;
@@ -150,7 +163,7 @@ public abstract class AbstractAnalysisResultPage extends AbstractFormPage implem
         toolkit.createLabel(databaseComp, DefaultMessagesImpl.getString("AbstractAnalysisResultPage.view"));//$NON-NLS-1$
         toolkit.createLabel(databaseComp, analysisHandler.getViewNames());
 
-        Composite executionComp = toolkit.createComposite(sectionClient);
+        Composite executionComp = toolkit.createComposite(summarySectionClient);
         executionComp.setLayout(new GridLayout(2, false));
         GridData executionCompData = new GridData(GridData.FILL_HORIZONTAL);
         executionCompData.verticalAlignment = GridData.BEGINNING;
@@ -159,13 +172,37 @@ public abstract class AbstractAnalysisResultPage extends AbstractFormPage implem
                 DefaultMessagesImpl.getString("ConnectionMasterDetailsPage.createionDate", PluginConstant.EMPTY_STRING)); //$NON-NLS-1$
         toolkit.createLabel(executionComp, getFormatDateStr(analysisHandler.getAnalysis().getCreationDate()));
         toolkit.createLabel(executionComp, DefaultMessagesImpl.getString("AbstractAnalysisResultPage.executionDate")); //$NON-NLS-1$
-        toolkit.createLabel(executionComp, getFormatDateStr(analysisHandler.getAnalysis().getResults().getResultMetadata()
-                .getExecutionDate()));
+        executeDateLabel = toolkit.createLabel(executionComp, getFormatDateStr(analysisHandler.getAnalysis().getResults()
+                .getResultMetadata().getExecutionDate()));
         toolkit.createLabel(executionComp, DefaultMessagesImpl.getString("AbstractAnalysisResultPage.executionDuration")); //$NON-NLS-1$
-        toolkit.createLabel(executionComp, analysisHandler.getExecuteDuration());
+        executeDurationLabel = toolkit.createLabel(executionComp, analysisHandler.getExecuteDuration());
         toolkit.createLabel(executionComp, DefaultMessagesImpl.getString("AbstractAnalysisResultPage.executionStatus")); //$NON-NLS-1$
+
+        setExecuteResultLabel(analysisHandler, executionComp);
+
+        toolkit.createLabel(executionComp, DefaultMessagesImpl.getString("AbstractAnalysisResultPage.numberOfExecution")); //$NON-NLS-1$
+        executeNumberLabel = toolkit.createLabel(executionComp, analysisHandler.getExecuteNumber());
+        toolkit.createLabel(executionComp, DefaultMessagesImpl.getString("AbstractAnalysisResultPage.lastSucessfulExecution")); //$NON-NLS-1$
+        executeOkNumberLabel = toolkit.createLabel(executionComp, analysisHandler.getLastExecutionNumberOk());
+
+        summarySection.setClient(summarySectionClient);
+    }
+
+    /**
+     * set the ExecuteResultLabel according to the execute result
+     * 
+     * @param analysisHandler
+     * @param executionComp
+     */
+    private void setExecuteResultLabel(AnalysisHandler analysisHandler, Composite executionComp) {
         if (analysisHandler.getResultMetadata().isLastRunOk()) {
-            toolkit.createLabel(executionComp, DefaultMessagesImpl.getString("AbstractAnalysisResultPage.success")); //$NON-NLS-1$
+            if (executionComp != null) {
+                executeResultLabel = toolkit.createLabel(executionComp,
+                        DefaultMessagesImpl.getString("AbstractAnalysisResultPage.success")); //$NON-NLS-1$
+            } else {
+                executeResultLabel.setText(DefaultMessagesImpl.getString("AbstractAnalysisResultPage.success")); //$NON-NLS-1$
+            }
+            executeResultLabel.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
         } else {
             // MOD msjian TDQ-5119 2012-12-24: the "execution status" should not display an error message when the
             // analysis is not executed yet
@@ -173,16 +210,34 @@ public abstract class AbstractAnalysisResultPage extends AbstractFormPage implem
             if (analysisHandler.getResultMetadata().getExecutionNumber() != 0) {
                 errMessage = DefaultMessagesImpl.getString("AbstractAnalysisResultPage.failure") + analysisHandler.getResultMetadata().getMessage(); //$NON-NLS-1$
             }
-            toolkit.createLabel(executionComp, errMessage).setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+            if (executionComp != null) {
+                executeResultLabel = toolkit.createLabel(executionComp, errMessage);
+            } else {
+                executeResultLabel.setText(errMessage);
+                // executeResultLabel.setSize(errMessage.length(), BIG_TABLE_NUM_ROWS)
+            }
+            executeResultLabel.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
             // TDQ-5119~
         }
+    }
 
-        toolkit.createLabel(executionComp, DefaultMessagesImpl.getString("AbstractAnalysisResultPage.numberOfExecution")); //$NON-NLS-1$
-        toolkit.createLabel(executionComp, analysisHandler.getExecuteNumber());
-        toolkit.createLabel(executionComp, DefaultMessagesImpl.getString("AbstractAnalysisResultPage.lastSucessfulExecution")); //$NON-NLS-1$
-        toolkit.createLabel(executionComp, analysisHandler.getLastExecutionNumberOk());
+    /**
+     * Added TDQ-8787, TDQ-9173, need to refresh the summary part after each dynamic running
+     */
+    protected void refreshSummaryContent() {
+        AnalysisHandler analysisHandler = this.getAnalysisHandler();
+        executeDateLabel.setText(getFormatDateStr(analysisHandler.getAnalysis().getResults().getResultMetadata()
+                .getExecutionDate()));
+        executeDateLabel.pack();
+        executeDurationLabel.setText(analysisHandler.getExecuteDuration());
+        executeDurationLabel.pack();
+        setExecuteResultLabel(analysisHandler, null);
+        executeNumberLabel.setText(analysisHandler.getExecuteNumber());
+        executeNumberLabel.pack();
+        executeOkNumberLabel.setText(analysisHandler.getLastExecutionNumberOk());
+        executeOkNumberLabel.pack();
 
-        summarySection.setClient(sectionClient);
+        executeResultLabel.pack();
     }
 
     private String getFormatDateStr(Date date) {

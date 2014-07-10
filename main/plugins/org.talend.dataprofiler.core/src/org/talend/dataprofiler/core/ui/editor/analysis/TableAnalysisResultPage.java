@@ -549,6 +549,8 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
         dynamicList.clear();
 
         masterPage.clearDynamicDatasets();
+        // TDQ-9173, need to refresh the summary part after each dynamic running
+        refreshSummaryContent();
     }
 
 }
