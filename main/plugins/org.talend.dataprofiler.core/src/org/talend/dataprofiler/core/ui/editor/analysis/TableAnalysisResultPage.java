@@ -479,7 +479,6 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
     public void registerDynamicEvent() {
         disposeComposite();
         createFormContent(getManagedForm());
-        System.err.println("table result register");
         // register dynamic event,for the indicator (for each column)
         for (DynamicIndicatorModel oneCategoryIndicatorModel : dynamicList) {
             CategoryDataset categoryDataset = oneCategoryIndicatorModel.getDataset();

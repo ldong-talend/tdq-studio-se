@@ -33,7 +33,6 @@ import org.talend.dataprofiler.core.PluginConstant;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.model.ModelElementIndicator;
 import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
-import org.talend.dataprofiler.core.ui.editor.preview.model.dataset.CustomerDefaultBAWDataset;
 import org.talend.dataprofiler.core.ui.events.DynamicBAWChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.EventEnum;
@@ -43,6 +42,7 @@ import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataprofiler.core.ui.utils.pagination.UIPagination;
 import org.talend.dataquality.indicators.Indicator;
 import org.talend.dq.analysis.AnalysisHandler;
+import org.talend.dq.indicators.preview.EIndicatorChartType;
 
 /**
  * DOC zqin class global comment. Detailled comment
@@ -207,12 +207,12 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
         for (DynamicIndicatorModel oneCategoryIndicatorModel : indiAndDatasets) {
             CategoryDataset categoryDataset = oneCategoryIndicatorModel.getDataset();
             TableViewer tableViewer = oneCategoryIndicatorModel.getTableViewer();
-            if (categoryDataset instanceof CustomerDefaultBAWDataset) {
-                // when all summary indicators are selected
-                // when all summary indicators are selected
+            if (EIndicatorChartType.SUMMARY_STATISTICS.equals(oneCategoryIndicatorModel.getChartType())) {
+                // when all/not-all summary indicators are selected
                 DynamicBAWChartEventReceiver bawReceiver = AnalysisUtils.createDynamicBAWChartEventReceiver(
                         oneCategoryIndicatorModel, categoryDataset, eventReceivers);
                 bawReceiver.setChartComposite(chartComposite);
+                bawReceiver.setTableViewer(tableViewer);
                 // register the parent baw receiver with one of summary indicator, no need to handle baw actually
                 registerIndicatorEvent(oneCategoryIndicatorModel.getIndicatorList().get(0), bawReceiver);
             } else {
@@ -221,7 +221,7 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
                     DynamicChartEventReceiver eReceiver = AnalysisUtils.createDynamicChartEventReceiver(categoryDataset, index++,
                             oneIndicator);
                     eReceiver.setChartComposite(chartComposite);
-
+                    eReceiver.setTableViewer(tableViewer);
                     registerIndicatorEvent(oneIndicator, eReceiver);
                 }
             }

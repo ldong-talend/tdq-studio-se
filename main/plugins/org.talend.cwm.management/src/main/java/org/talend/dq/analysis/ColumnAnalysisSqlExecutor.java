@@ -284,10 +284,6 @@ public class ColumnAnalysisSqlExecutor extends ColumnAnalysisExecutor {
                 if (!PluginConstant.EMPTY_STRING.equals(completedSqlString)) {
                     whereExpression = duplicateForCrossJoin(completedSqlString, whereExpression, tdColumn);
                     completedSqlString = addWhereToSqlStringStatement(whereExpression, completedSqlString);
-                } else {
-                    // MOD xqliu 2011-08-17 TDQ-3210
-                    completedSqlString = "select count(*) from " + table; //$NON-NLS-1$
-                    // ~ TDQ-3210
                 }
             }
         } else if (indicatorEclass.equals(IndicatorsPackage.eINSTANCE.getFrequencyIndicator())
@@ -825,15 +821,11 @@ public class ColumnAnalysisSqlExecutor extends ColumnAnalysisExecutor {
             setError(Messages.getString("ColumnAnalysisSqlExecutor.GotInvalidResultSet", //$NON-NLS-1$
                     dbms().toQualifiedName(catalogOrSchema, null, colName)));
             return null;
-            //            throw new AnalysisExecutionException(Messages.getString("ColumnAnalysisSqlExecutor.GotInvalidResultSet", //$NON-NLS-1$
-            // dbms().toQualifiedName(catalogOrSchema, null, colName)));
         }
 
         if (count == 0) {
-            //            this.errorMessage = Messages.getString("ColumnAnalysisSqlExecutor.CannotComputeQuantile",//$NON-NLS-1$
-            // dbms().toQualifiedName(catalogOrSchema, null, colName));
-            return PluginConstant.EMPTY_STRING;
-            // throw new AnalysisExecutionException(errorMessage);
+            // then use 0 to fill the query
+            return dbms().fillGenericQueryWithColumnTableLimitOffset(sqlExpression.getBody(), colName, table, "0", "0", "0");
         }
 
         Long midleCount = getOffsetInLimit(indicator, count);

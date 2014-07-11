@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.EClass;
@@ -256,7 +257,7 @@ public class ValueIndicatorImpl extends IndicatorImpl implements ValueIndicator 
 
         if (objects.size() == 1) {
             String str = String.valueOf(objects.get(0)[0]);
-            if (str == null) {
+            if (str == null || StringUtils.equalsIgnoreCase("null", str)) {
                 log.error("Value is null of " + this.getName() + " !!");
                 return false;
             }

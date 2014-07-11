@@ -159,7 +159,8 @@ public class DynamicChartEventReceiver extends EventReceiver {
                 tableViewer.getTable().clearAll();
                 tableViewer.setInput(input);
             } else {
-                refreshTable(String.valueOf(indValue));
+                System.err.println(this.indicatorName + "--" + value + "--index--" + this.entityIndex);
+                refreshTable(value == null ? String.valueOf(Double.NaN) : String.valueOf(indValue));
             }
         }
 
@@ -174,7 +175,7 @@ public class DynamicChartEventReceiver extends EventReceiver {
             dataset.setValue(0.0, indicatorName, indicatorName);
         }
         if (tableViewer != null) {
-            refreshTable("0.0");//$NON-NLS-1$
+            refreshTable(String.valueOf(Double.NaN));
         }
     }
 

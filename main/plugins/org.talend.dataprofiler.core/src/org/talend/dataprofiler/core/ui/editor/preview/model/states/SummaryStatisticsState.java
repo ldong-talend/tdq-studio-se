@@ -57,6 +57,9 @@ public class SummaryStatisticsState extends AbstractChartTypeStates {
 
     private int sqltype;
 
+    // TDQ-9140 , if any values = NaN, isMeaning = false, and will not use BAW chart.
+    private boolean isMeaning = true;
+
     /**
      * Sets the sqltype.
      * 
@@ -95,6 +98,10 @@ public class SummaryStatisticsState extends AbstractChartTypeStates {
                 IndicatorCommonUtil.getIndicatorValue(unit.getIndicator());
             }
 
+            if (unit.getValue() == null) {
+                this.isMeaning = false;
+            }
+
             if (unit.getIndicator().getRealValue() != null && "null".equals(unit.getIndicator().getRealValue())) {//$NON-NLS-1$
                 continue;
             } else {
@@ -128,7 +135,13 @@ public class SummaryStatisticsState extends AbstractChartTypeStates {
         CustomerDefaultCategoryDataset customerdataset = new CustomerDefaultCategoryDataset();
         for (IndicatorUnit unit : units) {
             // MOD xqliu 2009-06-29 bug 7068
-            String value = unit.getValue() == null ? "0" : unit.getValue().toString();//$NON-NLS-1$
+            String value = null;
+            if (unit.getValue() == null) {
+                value = String.valueOf(Double.NaN);
+                this.isMeaning = false;
+            } else {
+                value = unit.getValue().toString();
+            }
             if (Java2SqlType.isNumbericInSQL(sqltype)) {
                 // ~
                 try {
@@ -210,7 +223,7 @@ public class SummaryStatisticsState extends AbstractChartTypeStates {
     }
 
     private boolean isIntact() {
-        return units.size() == FULL_FLAG;
+        return units.size() == FULL_FLAG && isMeaning;
     }
 
     public String getReferenceLink() {

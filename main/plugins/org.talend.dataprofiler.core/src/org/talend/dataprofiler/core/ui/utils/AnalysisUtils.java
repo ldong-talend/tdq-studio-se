@@ -210,12 +210,22 @@ public class AnalysisUtils {
             DynamicIndicatorModel oneCategoryIndicatorModel, CategoryDataset categoryDataset,
             Map<Indicator, EventReceiver> eventReceivers) {
         DynamicBAWChartEventReceiver bawReceiver = new DynamicBAWChartEventReceiver();
-        bawReceiver.setBawDataset((CustomerDefaultBAWDataset) categoryDataset);
+        if (categoryDataset instanceof CustomerDefaultBAWDataset) {
+            // all summary selected
+            bawReceiver.setBawDataset((CustomerDefaultBAWDataset) categoryDataset);
+        } else {
+            // not-all summary selected
+            bawReceiver.setDataset(categoryDataset);
+        }
         bawReceiver.setBAWparentComposite(oneCategoryIndicatorModel.getBawParentChartComp());
-
+        bawReceiver.setTableViewer(oneCategoryIndicatorModel.getTableViewer());
+        int index = 0;
         for (Indicator oneIndicator : oneCategoryIndicatorModel.getSummaryIndicators()) {
             DynamicChartEventReceiver eReceiver = bawReceiver.createEventReceiver(
                     IndicatorEnum.findIndicatorEnum(oneIndicator.eClass()), oneIndicator);
+            eReceiver.setTableViewer(oneCategoryIndicatorModel.getTableViewer());
+            eReceiver.setEntityIndex(index++);
+            eReceiver.clearValue();
             eventReceivers.put(oneIndicator, eReceiver);
             EventManager.getInstance().register(oneIndicator, EventEnum.DQ_DYMANIC_CHART, eReceiver);
         }

@@ -26,6 +26,7 @@ import org.talend.dataprofiler.core.ui.editor.preview.IndicatorUnit;
 import org.talend.dataprofiler.core.ui.editor.preview.model.dataset.CustomerDefaultBAWDataset;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.SummaryStatisticsState;
 import org.talend.dataquality.indicators.Indicator;
+import org.talend.dq.indicators.IndicatorCommonUtil;
 import org.talend.dq.nodes.indicator.type.IndicatorEnum;
 
 /**
@@ -39,6 +40,14 @@ public class DynamicBAWChartEventReceiver extends DynamicChartEventReceiver {
 
     private List<IndicatorUnit> indicators = new ArrayList<IndicatorUnit>();
 
+    private DynamicChartEventReceiver IRQIndicatorEvent = null;
+
+    private Indicator IRQIndicator = null;
+
+    private DynamicChartEventReceiver rangeIndicatorEvent = null;
+
+    private Indicator rangeIndicator = null;
+
     Map<IndicatorEnum, Double> summaryValues = new HashMap<IndicatorEnum, Double>();
 
     public DynamicChartEventReceiver createEventReceiver(IndicatorEnum type, Indicator oneIndicator) {
@@ -48,13 +57,30 @@ public class DynamicBAWChartEventReceiver extends DynamicChartEventReceiver {
 
             @Override
             public boolean handle(Object value) {
-                addToSummaryMap(getIndicatorType(), value);
+                if (isIntact()) {
+                    addToSummaryMap(getIndicatorType(), value);
+                    if (this.getTableViewer() != null) {
+                        String str = value == null ? String.valueOf(Double.NaN) : String.valueOf(value);
+                        this.refreshTable(str);
+                    }
+                } else {
+                    super.handle(value);
+                    updateValueOfIRQAndRange();
+                }
                 return true;
             }
         };
         eReceiver.setIndicatorType(type);
+        eReceiver.setIndicatorName(oneIndicator.getName());
         indicators.add(new ColumnIndicatorUnit(type, oneIndicator, null));
-        // oneIndicator.getAnalyzedElement().get
+
+        if (IndicatorEnum.IQRIndicatorEnum.equals(type)) {
+            this.IRQIndicator = oneIndicator;
+            this.IRQIndicatorEvent = eReceiver;
+        } else if (IndicatorEnum.RangeIndicatorEnum.equals(type)) {
+            this.rangeIndicator = oneIndicator;
+            this.rangeIndicatorEvent = eReceiver;
+        }
         return eReceiver;
     }
 
@@ -68,24 +94,53 @@ public class DynamicBAWChartEventReceiver extends DynamicChartEventReceiver {
         refreshChart();
     }
 
+    private boolean isIntact() {
+        return indicators.size() == SummaryStatisticsState.FULL_FLAG;
+    }
+
     // judge if all summary indicator has its result, if yes, create a item and refresh the BAW chart
     private void refreshChart() {
-        if (summaryValues.size() == SummaryStatisticsState.FULL_CHART) {
-            // The BAW chart doesnot support dynamic, so only can create a new one after all finished.
-            SummaryStatisticsState state = new SummaryStatisticsState(indicators);
-            state.setSqltype(Types.DOUBLE);
-            JFreeChart chart = state.getChart();
-            ChartDecorator.decorate(chart, null);
-            if (BAWparentComposite != null) {
-                BAWparentComposite.setChart(chart);
-                BAWparentComposite.forceRedraw();
+        // when the user didnot select all summary indicators
+        if (isIntact()) {
+            updateValueOfIRQAndRange();
+        } else {
+
+            // when the user select all summary indicators
+            if (summaryValues.size() == SummaryStatisticsState.FULL_CHART) {
+                // The BAW chart doesnot support dynamic, so only can create a new one after all finished.
+                SummaryStatisticsState state = new SummaryStatisticsState(indicators);
+                state.setSqltype(Types.DOUBLE);
+                JFreeChart chart = state.getChart();
+                ChartDecorator.decorate(chart, null);
+                if (BAWparentComposite != null) {
+                    BAWparentComposite.setChart(chart);
+                    BAWparentComposite.forceRedraw();
+                }
+
+                EventManager.getInstance().publish(chartComposite, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART, null);
+
+                // 6 indicators will refresh the chart, IQR and range indicator need to refresh their values in the
+                // table viewer
+                updateValueOfIRQAndRange();
+
+                // reset the values
+                summaryValues.clear();
+                indicators.clear();
             }
+        }
+    }
 
-            EventManager.getInstance().publish(chartComposite, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART, null);
-
-            // reset the values
-            summaryValues.clear();
-            indicators.clear();
+    /**
+     * DOC yyin Comment method "updateValueOfIRQAndRange".
+     */
+    private void updateValueOfIRQAndRange() {
+        if (this.getTableViewer() != null) {
+            Object indicatorValue = IndicatorCommonUtil.getIndicatorValue(IRQIndicator);
+            String str = indicatorValue == null ? String.valueOf(Double.NaN) : String.valueOf(indicatorValue);
+            IRQIndicatorEvent.refreshTable(str);
+            indicatorValue = IndicatorCommonUtil.getIndicatorValue(rangeIndicator);
+            str = indicatorValue == null ? String.valueOf(Double.NaN) : String.valueOf(indicatorValue);
+            rangeIndicatorEvent.refreshTable(str);
         }
     }
 
