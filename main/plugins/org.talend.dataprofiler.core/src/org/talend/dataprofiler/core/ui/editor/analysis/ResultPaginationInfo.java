@@ -176,6 +176,7 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
      */
     private void createChart(final Composite comp, EIndicatorChartType chartType, List<IndicatorUnit> units) {
         IChartTypeStates chartTypeState = ChartTypeStatesOperator.getChartState(chartType, units);
+        DynamicIndicatorModel dyModel = new DynamicIndicatorModel();
 
         // MOD TDQ-8787 20140618 yyin: to let the chart and table use the same dataset
         JFreeChart chart = null;
@@ -188,6 +189,7 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
                 if (EIndicatorChartType.BENFORD_LAW_STATISTICS.equals(chartType)) {
                     // indicatorDatasetMap.put(getIndicators(units), chart.getCategoryPlot().getDataset(0));
                     dataset = chart.getCategoryPlot().getDataset(1);
+                    dyModel.setSecondDataset(chart.getCategoryPlot().getDataset(0));
                 } else {
                     dataset = chart.getCategoryPlot().getDataset();
                 }
@@ -199,7 +201,6 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
 
         // Added TDQ-8787 2014-06-18 yyin: add the current units and dataset into the list
         List<Indicator> indicators = null;
-        DynamicIndicatorModel dyModel = new DynamicIndicatorModel();
         dyModel.setDataset(dataset);
         dyModel.setChartType(chartType);
         this.dynamicList.add(dyModel);

@@ -17,6 +17,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.freq.BenfordLawFrequencyState;
 import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataprofiler.core.ui.utils.ComparatorsFactory;
+import org.talend.dataquality.indicators.impl.BenfordLawFrequencyIndicatorImpl;
 import org.talend.dq.indicators.ext.FrequencyExt;
 
 /**
@@ -38,8 +39,10 @@ public class BenfordFrequencyDynamicChartEventReceiver extends FrequencyDynamicC
         // the value of the bar
         customerdataset.addValue(freqExt.getFrequency(), "1", keyLabel); //$NON-NLS-1$
         // the value of the line
-        ((DefaultCategoryDataset) secondDataset).addValue(BenfordLawFrequencyState.formalValues[Integer.valueOf(keyLabel)],
-                "Expected(%)", keyLabel);//$NON-NLS-1$
+        if (!BenfordLawFrequencyIndicatorImpl.INVALID.equals(keyLabel)) {
+            ((DefaultCategoryDataset) secondDataset).addValue(
+                    BenfordLawFrequencyState.formalValues[Integer.valueOf(keyLabel) - 1], "Expected(%)", keyLabel);//$NON-NLS-1$
+        }
     }
 
     @Override

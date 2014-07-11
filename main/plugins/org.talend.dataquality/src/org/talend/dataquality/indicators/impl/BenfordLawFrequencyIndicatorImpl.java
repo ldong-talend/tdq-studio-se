@@ -19,15 +19,18 @@ import org.talend.dataquality.indicators.IndicatorsPackage;
  * end-user-doc -->
  * <p>
  * </p>
- *
+ * 
  * @generated
  */
 public class BenfordLawFrequencyIndicatorImpl extends FrequencyIndicatorImpl implements BenfordLawFrequencyIndicator {
 
     private boolean isChecked = false;
 
+    public static String INVALID = "invalid";//$NON-NLS-1$
+
     /**
      * <!-- begin-user-doc --> <!-- end-user-doc -->
+     * 
      * @generated
      */
     protected BenfordLawFrequencyIndicatorImpl() {
@@ -67,7 +70,7 @@ public class BenfordLawFrequencyIndicatorImpl extends FrequencyIndicatorImpl imp
             for (Object val : invalid) {
                 valueToFreq.remove(val);
             }
-            valueToFreq.put("invalid", counted);
+            valueToFreq.put(INVALID, counted);
         }
 
         // check the length, should only = 1, if >1, cut it
@@ -116,6 +119,7 @@ public class BenfordLawFrequencyIndicatorImpl extends FrequencyIndicatorImpl imp
 
     /**
      * <!-- begin-user-doc --> <!-- end-user-doc -->
+     * 
      * @generated
      */
     @Override
@@ -134,7 +138,7 @@ public class BenfordLawFrequencyIndicatorImpl extends FrequencyIndicatorImpl imp
         this.count++;
 
         if (data == null) {
-            setValue("invalid");
+            setValue(INVALID);
             return true;
         }
 
@@ -142,7 +146,7 @@ public class BenfordLawFrequencyIndicatorImpl extends FrequencyIndicatorImpl imp
         if (isInvalid == 0) {
             setValue("0");
         } else if (isInvalid < 0) {
-            setValue("invalid");
+            setValue(INVALID);
         } else {
             setValue(String.valueOf(data).substring(0, 1));
         }
