@@ -40,7 +40,6 @@ import org.talend.dataprofiler.core.ImageLib;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
 import org.talend.dataprofiler.core.ui.action.actions.RunAnalysisAction;
-import org.talend.dataprofiler.core.ui.editor.preview.model.dataset.CustomerDefaultBAWDataset;
 import org.talend.dataprofiler.core.ui.events.DynamicBAWChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.EventEnum;
@@ -50,6 +49,7 @@ import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataquality.analysis.Analysis;
 import org.talend.dataquality.indicators.Indicator;
 import org.talend.dq.analysis.AnalysisHandler;
+import org.talend.dq.indicators.preview.EIndicatorChartType;
 
 /**
  * DOC yyin class global comment. Detailled comment
@@ -234,7 +234,7 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
         // register dynamic event,for the indicator (for each column)
         for (DynamicIndicatorModel oneCategoryIndicatorModel : indiAndDatasets) {
             CategoryDataset categoryDataset = oneCategoryIndicatorModel.getDataset();
-            if (categoryDataset instanceof CustomerDefaultBAWDataset) {
+            if (EIndicatorChartType.SUMMARY_STATISTICS.equals(oneCategoryIndicatorModel.getChartType())) {
                 // when all summary indicators are selected
                 DynamicBAWChartEventReceiver bawReceiver = AnalysisUtils.createDynamicBAWChartEventReceiver(
                         oneCategoryIndicatorModel, categoryDataset, eventReceivers);
@@ -244,7 +244,9 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
             } else {
                 int index = 0;
                 for (Indicator oneIndicator : oneCategoryIndicatorModel.getIndicatorList()) {
-                    DynamicChartEventReceiver eReceiver = createEventReceiver(categoryDataset, index, oneIndicator);
+                    // if the indicator is a frequency indicator, create a Frequency Event Receiver
+
+                    DynamicChartEventReceiver eReceiver = createEventReceiver(oneCategoryIndicatorModel, index, oneIndicator);
                     eReceiver.setChartComposite(chartComposite);
                     registerIndicatorEvent(oneIndicator, eReceiver);
                 }
@@ -261,10 +263,12 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
      * @param categoryDataset
      * @param index
      * @param oneIndicator
+     * @param eIndicatorChartType
      * @return
      */
-    protected DynamicChartEventReceiver createEventReceiver(CategoryDataset categoryDataset, int index, Indicator oneIndicator) {
-        return AnalysisUtils.createDynamicChartEventReceiver(categoryDataset, index++, oneIndicator);
+    protected DynamicChartEventReceiver createEventReceiver(DynamicIndicatorModel indicatorModel, int index,
+            Indicator oneIndicator) {
+        return AnalysisUtils.createDynamicChartEventReceiver(indicatorModel, index++, oneIndicator);
     }
 
     private void registerIndicatorEvent(Indicator oneIndicator, DynamicChartEventReceiver eReceiver) {

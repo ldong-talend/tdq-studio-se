@@ -56,7 +56,6 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.JFreeChart;
-import org.jfree.data.category.CategoryDataset;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.cwm.helper.ConnectionHelper;
@@ -686,9 +685,9 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
     }
 
     @Override
-    protected DynamicChartEventReceiver createEventReceiver(CategoryDataset categoryDataset, int index, Indicator oneIndicator) {
+    protected DynamicChartEventReceiver createEventReceiver(DynamicIndicatorModel indModel, int index, Indicator oneIndicator) {
         TableDynamicChartEventReceiver eReceiver = new TableDynamicChartEventReceiver();
-        eReceiver.setDataset(categoryDataset);
+        eReceiver.setDataset(indModel.getDataset());
         eReceiver.setIndexInDataset(index++);
         eReceiver.setIndicatorName(oneIndicator.getName());
         eReceiver.setIndicator(oneIndicator);

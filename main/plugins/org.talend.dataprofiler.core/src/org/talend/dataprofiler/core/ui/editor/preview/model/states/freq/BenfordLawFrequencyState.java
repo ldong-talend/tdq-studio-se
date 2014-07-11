@@ -39,7 +39,7 @@ public class BenfordLawFrequencyState extends FrequencyTypeStates {
 
     // 1~9,Numerically, the leading digits have the following distribution in Benford's law, add: 0, invalid with value
     // 0.0
-    private double[] formalValues = { 0.301, 0.176, 0.125, 0.097, 0.079, 0.067, 0.058, 0.051, 0.046, 0.0, 0.0 };
+    public static double[] formalValues = { 0.301, 0.176, 0.125, 0.097, 0.079, 0.067, 0.058, 0.051, 0.046, 0.0, 0.0 };
 
     private List<String> dotChartLabels = new ArrayList<String>();
 

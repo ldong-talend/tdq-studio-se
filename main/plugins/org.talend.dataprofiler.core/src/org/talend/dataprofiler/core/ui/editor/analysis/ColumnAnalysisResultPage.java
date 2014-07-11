@@ -218,8 +218,8 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
             } else {
                 int index = 0;
                 for (Indicator oneIndicator : oneCategoryIndicatorModel.getIndicatorList()) {
-                    DynamicChartEventReceiver eReceiver = AnalysisUtils.createDynamicChartEventReceiver(categoryDataset, index++,
-                            oneIndicator);
+                    DynamicChartEventReceiver eReceiver = AnalysisUtils.createDynamicChartEventReceiver(
+                            oneCategoryIndicatorModel, index++, oneIndicator);
                     eReceiver.setChartComposite(chartComposite);
                     eReceiver.setTableViewer(tableViewer);
                     registerIndicatorEvent(oneIndicator, eReceiver);

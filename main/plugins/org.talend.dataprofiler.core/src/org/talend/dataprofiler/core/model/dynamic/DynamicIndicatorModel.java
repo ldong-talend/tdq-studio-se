@@ -36,6 +36,9 @@ public class DynamicIndicatorModel {
     // the dataset of the chart
     private CategoryDataset dataset = null;
 
+    // for benford law indicator
+    private CategoryDataset secondDataset = null;
+
     // the table of this category of indicators in the result page only
     private TableViewer tableViewer = null;
 
@@ -155,5 +158,21 @@ public class DynamicIndicatorModel {
         this.indicatorList = null;
         this.tableViewer = null;
         this.bawParentChartComp = null;
+    }
+
+    /**
+     * Getter for secondDataset.
+     * @return the secondDataset
+     */
+    public CategoryDataset getSecondDataset() {
+        return secondDataset;
+    }
+
+    /**
+     * Sets the secondDataset.
+     * @param secondDataset the secondDataset to set
+     */
+    public void setSecondDataset(CategoryDataset secondDataset) {
+        this.secondDataset = secondDataset;
     }
 }

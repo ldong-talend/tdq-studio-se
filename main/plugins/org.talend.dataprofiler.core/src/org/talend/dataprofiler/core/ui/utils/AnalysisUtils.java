@@ -25,22 +25,20 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.data.category.CategoryDataset;
-import org.jfree.data.category.DefaultCategoryDataset;
 import org.talend.commons.emf.FactoriesUtil;
-import org.talend.commons.utils.SpecialValueDisplay;
-import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
 import org.talend.dataprofiler.core.model.dynamic.DynamicIndicatorModel;
 import org.talend.dataprofiler.core.ui.editor.preview.model.dataset.CustomerDefaultBAWDataset;
+import org.talend.dataprofiler.core.ui.events.BenfordFrequencyDynamicChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.DynamicBAWChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.EventEnum;
 import org.talend.dataprofiler.core.ui.events.EventManager;
 import org.talend.dataprofiler.core.ui.events.EventReceiver;
+import org.talend.dataprofiler.core.ui.events.FrequencyDynamicChartEventReceiver;
 import org.talend.dataquality.analysis.AnalysisResult;
 import org.talend.dataquality.indicators.BenfordLawFrequencyIndicator;
 import org.talend.dataquality.indicators.CountsIndicator;
 import org.talend.dataquality.indicators.Indicator;
-import org.talend.dataquality.indicators.IndicatorParameters;
 import org.talend.dataquality.indicators.RowCountIndicator;
 import org.talend.dq.indicators.ext.FrequencyExt;
 import org.talend.dq.indicators.preview.EIndicatorChartType;
@@ -82,44 +80,6 @@ public class AnalysisUtils {
                 return false;
             }
         };
-    }
-
-    public static void setFrequecyToDataset(DefaultCategoryDataset customerdataset, FrequencyExt[] frequencyExt,
-            Indicator indicator) {
-
-        int numOfShown = frequencyExt.length;
-        IndicatorParameters parameters = indicator.getParameters();
-        if (parameters != null) {
-            if (parameters.getTopN() < numOfShown) {
-                numOfShown = parameters.getTopN();
-            }
-        }
-        FrequencyExt[] tempFreq = frequencyExt;
-        if (indicator instanceof BenfordLawFrequencyIndicator) {
-            ComparatorsFactory.sort(tempFreq, ComparatorsFactory.BENFORDLAW_FREQUENCY_COMPARATOR_ID);
-
-            tempFreq = AnalysisUtils.recomputerForBenfordLaw(tempFreq);
-        }
-
-        for (int i = 0; i < numOfShown; i++) {
-            FrequencyExt freqExt = tempFreq[i];
-            String keyLabel = String.valueOf(freqExt.getKey());
-            if ("null".equals(keyLabel)) { //$NON-NLS-1$
-                keyLabel = SpecialValueDisplay.NULL_FIELD;
-            }
-            if ("".equals(keyLabel)) { //$NON-NLS-1$
-                keyLabel = SpecialValueDisplay.EMPTY_FIELD;
-            }
-
-            if (indicator instanceof BenfordLawFrequencyIndicator) {
-                customerdataset.addValue(freqExt.getFrequency(), "1", keyLabel); //$NON-NLS-1$
-            } else {
-                customerdataset.addValue(freqExt.getValue(), "1", keyLabel); //$NON-NLS-1$
-            }
-            ChartDataEntity entity = createChartEntity(indicator, freqExt, keyLabel);
-
-            ((CustomerDefaultCategoryDataset) customerdataset).addDataEntity(entity);
-        }
     }
 
     public static ChartDataEntity createChartEntity(Indicator indicator, FrequencyExt freqExt, String keyLabel) {
@@ -179,17 +139,26 @@ public class AnalysisUtils {
     }
 
     /**
-     * create a DynamicChart Event Receiver.
+     * create a DynamicChart Event Receiver, according to its type
      * 
      * @param categoryDataset
      * @param index
      * @param oneIndicator
+     * @param eIndicatorChartType
      * @return
      */
-    public static DynamicChartEventReceiver createDynamicChartEventReceiver(CategoryDataset categoryDataset, int index,
+    public static DynamicChartEventReceiver createDynamicChartEventReceiver(DynamicIndicatorModel indicatorModel, int index,
             Indicator oneIndicator) {
-        DynamicChartEventReceiver eReceiver = new DynamicChartEventReceiver();
-        eReceiver.setDataset(categoryDataset);
+        DynamicChartEventReceiver eReceiver = null;
+        if (isBenford(indicatorModel.getChartType())) {
+            eReceiver = new BenfordFrequencyDynamicChartEventReceiver();
+            ((BenfordFrequencyDynamicChartEventReceiver) eReceiver).setSecondDataset(indicatorModel.getSecondDataset());
+        } else if (isFrequency(indicatorModel.getChartType())) {
+            eReceiver = new FrequencyDynamicChartEventReceiver();
+        } else {
+            eReceiver = new DynamicChartEventReceiver();
+        }
+        eReceiver.setDataset(indicatorModel.getDataset());
         eReceiver.setIndexInDataset(index);
         eReceiver.setIndicatorName(oneIndicator.getName());
 
@@ -197,6 +166,51 @@ public class AnalysisUtils {
         // clear data
         eReceiver.clearValue();
         return eReceiver;
+    }
+
+    /**
+     * DOC yyin Comment method "isBenford".
+     * 
+     * @param eIndicatorChartType
+     * @return
+     */
+    @SuppressWarnings("incomplete-switch")
+    private static boolean isFrequency(EIndicatorChartType eIndicatorChartType) {
+        switch (eIndicatorChartType) {
+        case BIN_FREQUENCE_STATISTICS:
+        case BIN_LOW_FREQUENCE_STATISTICS:
+        case DATE_FREQUENCE_STATISTICS:
+        case DATE_LOW_FREQUENCE_STATISTICS:
+        case FREQUENCE_STATISTICS:
+        case LOW_FREQUENCE_STATISTICS:
+        case SOUNDEX_FREQUENCY_TABLE:
+        case SOUNDEX_LOW_FREQUENCY_TABLE:
+        case UDI_FREQUENCY:
+        case WEEK_FREQUENCE_STATISTICS:
+        case WEEK_LOW_FREQUENCE_STATISTICS:
+        case MONTH_FREQUENCE_STATISTICS:
+        case MONTH_LOW_FREQUENCE_STATISTICS:
+        case QUARTER_FREQUENCE_STATISTICS:
+        case QUARTER_LOW_FREQUENCE_STATISTICS:
+        case YEAR_FREQUENCE_STATISTICS:
+        case YEAR_LOW_FREQUENCE_STATISTICS:
+        case MODE_INDICATOR:
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * DOC yyin Comment method "isFrequency".
+     * 
+     * @param eIndicatorChartType
+     * @return
+     */
+    private static boolean isBenford(EIndicatorChartType eIndicatorChartType) {
+        if (EIndicatorChartType.BENFORD_LAW_STATISTICS.equals(eIndicatorChartType)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -252,6 +266,7 @@ public class AnalysisUtils {
             // Added TDQ-8787 20140612 : store the dataset, and the index of the current indicator
             if (EIndicatorChartType.BENFORD_LAW_STATISTICS.equals(chartType)) {
                 dataset = plot.getDataset(1);
+                dyModel.setSecondDataset(plot.getDataset(0));
             }
             dyModel.setDataset(dataset);
         }

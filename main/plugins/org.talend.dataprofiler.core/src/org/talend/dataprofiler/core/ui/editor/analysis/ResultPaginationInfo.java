@@ -204,10 +204,10 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
         dyModel.setChartType(chartType);
         this.dynamicList.add(dyModel);
 
-        if (chart != null) {
-            indicators = getIndicators(units);
-            dyModel.setIndicatorList(indicators);
-        }
+        // if (chart != null) {
+        indicators = getIndicators(units);
+        dyModel.setIndicatorList(indicators);
+        // }
         ChartWithData chartData = new ChartWithData(chartType, chart, ((ICustomerDataset) dataset).getDataEntities());
 
         // create UI

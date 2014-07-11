@@ -17,15 +17,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
-import org.talend.dataprofiler.common.ui.editor.preview.ICustomerDataset;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.ui.editor.preview.model.ChartWithData;
-import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataquality.indicators.FrequencyIndicator;
 import org.talend.dataquality.indicators.Indicator;
 import org.talend.dataquality.indicators.ModeIndicator;
 import org.talend.dq.helper.UDIHelper;
-import org.talend.dq.indicators.ext.FrequencyExt;
 import org.talend.dq.indicators.ext.PatternMatchingExt;
 import org.talend.dq.indicators.preview.table.ChartDataEntity;
 import org.talend.dq.nodes.indicator.type.IndicatorEnum;
@@ -36,7 +33,7 @@ import org.talend.utils.format.StringFormatUtil;
  */
 public class DynamicChartEventReceiver extends EventReceiver {
 
-    private DefaultCategoryDataset dataset;
+    protected DefaultCategoryDataset dataset;
 
     protected Indicator indicator;
 
@@ -47,7 +44,7 @@ public class DynamicChartEventReceiver extends EventReceiver {
     // mainly used for the summary indicators
     private IndicatorEnum indicatorType = null;
 
-    private TableViewer tableViewer = null;
+    protected TableViewer tableViewer = null;
 
     protected Composite chartComposite;
 
@@ -129,16 +126,6 @@ public class DynamicChartEventReceiver extends EventReceiver {
                     ((CustomerDefaultCategoryDataset) dataset).setValue(Double.parseDouble((String) indValue), indicatorName,
                             indicatorName);
                 }
-            } else if (indValue instanceof FrequencyExt[]) {
-                // clear old data
-                if (dataset instanceof CustomerDefaultCategoryDataset) {
-                    ((CustomerDefaultCategoryDataset) dataset).clearAll();
-                } else {
-                    dataset.clear();
-                }
-                // no sort needed here
-                FrequencyExt[] frequencyExt = (FrequencyExt[]) indValue;
-                AnalysisUtils.setFrequecyToDataset(dataset, frequencyExt, indicator);
             } else if (indValue instanceof PatternMatchingExt) {
                 PatternMatchingExt patternExt = (PatternMatchingExt) indValue;
                 ((CustomerDefaultCategoryDataset) dataset).setValue(patternExt.getNotMatchingValueCount(),
@@ -151,17 +138,7 @@ public class DynamicChartEventReceiver extends EventReceiver {
             }
         }
         if (tableViewer != null) {
-            if (indValue instanceof FrequencyExt[]) {
-                ChartWithData input = (ChartWithData) tableViewer.getInput();
-                if (input != null) {
-                    input.setEntities(((ICustomerDataset) dataset).getDataEntities());
-                }
-                tableViewer.getTable().clearAll();
-                tableViewer.setInput(input);
-            } else {
-                System.err.println(this.indicatorName + "--" + value + "--index--" + this.entityIndex);
-                refreshTable(value == null ? String.valueOf(Double.NaN) : String.valueOf(indValue));
-            }
+            refreshTable(value == null ? String.valueOf(Double.NaN) : String.valueOf(indValue));
         }
 
         // need to refresh the parent composite of the chart to show the changes
