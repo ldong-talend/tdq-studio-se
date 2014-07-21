@@ -82,7 +82,8 @@ public class AnalysisUtils {
         };
     }
 
-    public static ChartDataEntity createChartEntity(Indicator indicator, FrequencyExt freqExt, String keyLabel) {
+    public static ChartDataEntity createChartEntity(Indicator indicator, FrequencyExt freqExt, String keyLabel,
+            boolean isWithRowCountIndicator) {
         ChartDataEntity entity = new ChartDataEntity();
         entity.setIndicator(indicator);
         // MOD mzhao feature:6307 display soundex distinct count and real count.
@@ -96,7 +97,7 @@ public class AnalysisUtils {
         } else if (indicator instanceof BenfordLawFrequencyIndicator) {
             entity.setPercent(freqExt.getFrequency());
         } else {
-            Double percent = isWithRowCountIndicator(indicator) ? freqExt.getFrequency() : Double.NaN;
+            Double percent = isWithRowCountIndicator ? freqExt.getFrequency() : Double.NaN;
             entity.setPercent(percent);
         }
         return entity;
@@ -195,6 +196,8 @@ public class AnalysisUtils {
         case YEAR_FREQUENCE_STATISTICS:
         case YEAR_LOW_FREQUENCE_STATISTICS:
         case MODE_INDICATOR:
+        case PATTERN_FREQUENCE_STATISTICS:
+        case PATTERN_LOW_FREQUENCE_STATISTICS:
             return true;
         }
         return false;

@@ -21,6 +21,7 @@ import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataquality.indicators.BenfordLawFrequencyIndicator;
 import org.talend.dataquality.indicators.Indicator;
 import org.talend.dataquality.indicators.IndicatorParameters;
+import org.talend.dataquality.indicators.ModeIndicator;
 import org.talend.dq.indicators.ext.FrequencyExt;
 import org.talend.dq.indicators.preview.table.ChartDataEntity;
 
@@ -47,18 +48,26 @@ public class FrequencyDynamicChartEventReceiver extends DynamicChartEventReceive
             if (indValue instanceof FrequencyExt[]) {
                 FrequencyExt[] frequencyExt = (FrequencyExt[]) indValue;
                 setFrequecyToDataset(dataset, frequencyExt, indicator);
-            } else {// for Mode indicator
-                ((CustomerDefaultCategoryDataset) dataset).setValue((Number) indValue, indicatorName, indicatorName);
             }
         }
         if (tableViewer != null) {
             // if (indValue instanceof FrequencyExt[]) {
             ChartWithData input = (ChartWithData) tableViewer.getInput();
             if (input != null) {
+                if (this.indicator instanceof ModeIndicator) {
+                    ChartDataEntity entity = new ChartDataEntity();
+                    entity.setIndicator(indicator);
+                    entity.setLabel(this.indicatorName);
+                    entity.setValue(String.valueOf(indValue));
+
+                    ((CustomerDefaultCategoryDataset) dataset).addDataEntity(entity);
+                }
                 input.setEntities(((ICustomerDataset) dataset).getDataEntities());
             }
-            tableViewer.getTable().clearAll();
-            tableViewer.setInput(input);
+            if (!tableViewer.getTable().isDisposed()) {
+                tableViewer.getTable().clearAll();
+                tableViewer.setInput(input);
+            }
             // }
         }
 
@@ -79,6 +88,7 @@ public class FrequencyDynamicChartEventReceiver extends DynamicChartEventReceive
         }
         FrequencyExt[] tempFreq = handleFrequency(frequencyExt);
 
+        boolean withRowCountIndicator = AnalysisUtils.isWithRowCountIndicator(indicator);
         for (int i = 0; i < numOfShown; i++) {
             FrequencyExt freqExt = tempFreq[i];
             String keyLabel = String.valueOf(freqExt.getKey());
@@ -91,7 +101,7 @@ public class FrequencyDynamicChartEventReceiver extends DynamicChartEventReceive
 
             addValueToDataset(customerdataset, freqExt, keyLabel);
 
-            ChartDataEntity entity = AnalysisUtils.createChartEntity(indicator, freqExt, keyLabel);
+            ChartDataEntity entity = AnalysisUtils.createChartEntity(indicator, freqExt, keyLabel, withRowCountIndicator);
 
             ((CustomerDefaultCategoryDataset) customerdataset).addDataEntity(entity);
         }

@@ -14,6 +14,7 @@ package org.talend.dataprofiler.core.ui.editor.preview.model.states;
 
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.jfree.chart.JFreeChart;
@@ -49,7 +50,8 @@ public class ModeStatisticsState extends AbstractChartTypeStates {
             ChartDataEntity entity = new ChartDataEntity();
             entity.setIndicator(unit.getIndicator());
             entity.setLabel(label);
-            entity.setValue(String.valueOf(unit.getValue()));
+            Object value = unit.getValue();
+            entity.setValue(String.valueOf(value == null ? StringUtils.EMPTY : value));
 
             customerdataset.addDataEntity(entity);
         }

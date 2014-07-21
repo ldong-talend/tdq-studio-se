@@ -42,6 +42,8 @@ public class BenfordFrequencyDynamicChartEventReceiver extends FrequencyDynamicC
         if (!BenfordLawFrequencyIndicatorImpl.INVALID.equals(keyLabel)) {
             ((DefaultCategoryDataset) secondDataset).addValue(
                     BenfordLawFrequencyState.formalValues[Integer.valueOf(keyLabel) - 1], "Expected(%)", keyLabel);//$NON-NLS-1$
+        } else {
+            ((DefaultCategoryDataset) secondDataset).addValue(BenfordLawFrequencyState.formalValues[9], "Expected(%)", keyLabel);//$NON-NLS-1$
         }
     }
 

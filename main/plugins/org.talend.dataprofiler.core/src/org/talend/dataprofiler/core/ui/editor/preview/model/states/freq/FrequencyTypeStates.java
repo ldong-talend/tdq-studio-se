@@ -48,6 +48,7 @@ public abstract class FrequencyTypeStates extends AbstractChartTypeStates {
 
     public ICustomerDataset getCustomerDataset() {
         CustomerDefaultCategoryDataset customerdataset = new CustomerDefaultCategoryDataset();
+        boolean withRowCountIndicator = isWithRowCountIndicator();
 
         for (IndicatorUnit unit : units) {
             if (unit.isExcuted()) {
@@ -83,14 +84,14 @@ public abstract class FrequencyTypeStates extends AbstractChartTypeStates {
                     entity.setLabel(keyLabel);
                     entity.setValue(String.valueOf(freqExt.getValue()));
 
-                    Double percent = isWithRowCountIndicator() ? freqExt.getFrequency() : Double.NaN;
+                    Double percent = withRowCountIndicator ? freqExt.getFrequency() : Double.NaN;
                     entity.setPercent(percent);
 
                     customerdataset.addDataEntity(entity);
                 }
             } else {
                 ChartDataEntity entity = AnalysisUtils.createChartEntity(unit.getIndicator(), null,
-                        SpecialValueDisplay.EMPTY_FIELD);
+                        SpecialValueDisplay.EMPTY_FIELD, false);
                 FrequencyExt fre = new FrequencyExt();
                 fre.setFrequency(0.0);
                 setValueToDataset(customerdataset, fre, unit.getIndicatorName());

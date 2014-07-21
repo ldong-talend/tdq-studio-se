@@ -205,10 +205,14 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
         dyModel.setChartType(chartType);
         this.dynamicList.add(dyModel);
 
-        // if (chart != null) {
-        indicators = getIndicators(units);
+        ChartDataEntity[] dataEntities = ((ICustomerDataset) dataset).getDataEntities();
+        if (dataEntities != null && dataEntities.length > 0) {
+            indicators = getIndicators(dataEntities);
+        } else {
+            indicators = getIndicators(units);
+        }
         dyModel.setIndicatorList(indicators);
-        // }
+
         ChartWithData chartData = new ChartWithData(chartType, chart, ((ICustomerDataset) dataset).getDataEntities());
 
         // create UI
@@ -264,6 +268,21 @@ public class ResultPaginationInfo extends IndicatorPaginationInfo {
         });
 
         masterPage.registerSection(subComp);
+    }
+
+    /**
+     * get the indicators from the data entities, which maybe sorted, and the order is changed.
+     * 
+     * @param dataEntities
+     * @return
+     */
+    private List<Indicator> getIndicators(ChartDataEntity[] dataEntities) {
+        List<Indicator> indicators = new ArrayList<Indicator>();
+
+        for (ChartDataEntity entity : dataEntities) {
+            indicators.add(entity.getIndicator());
+        }
+        return indicators;
     }
 
     private void addMouseListenerForChart(final ChartComposite chartComp, final IDataExplorer explorer, final Analysis analysis) {
