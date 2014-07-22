@@ -15,6 +15,7 @@ package org.talend.dataprofiler.core.ui.editor.preview.model.states;
 import java.util.List;
 
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.CategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.chart.TopChartFactory;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.ui.editor.preview.IndicatorUnit;
@@ -27,9 +28,13 @@ public class UDISimpleStatisticsState extends SimpleStatisticsState {
 
     @Override
     public JFreeChart getChart() {
-        return TopChartFactory.createBarChart(
-                DefaultMessagesImpl.getString("SimpleStatisticsState.UserIndicators"), getDataset(), false); //$NON-NLS-1$
+        return getChart(getDataset());
+    }
 
+    @Override
+    public JFreeChart getChart(CategoryDataset dataset) {
+        return TopChartFactory.createBarChart(
+                DefaultMessagesImpl.getString("SimpleStatisticsState.UserIndicators"), dataset, false); //$NON-NLS-1$
     }
 
     /**

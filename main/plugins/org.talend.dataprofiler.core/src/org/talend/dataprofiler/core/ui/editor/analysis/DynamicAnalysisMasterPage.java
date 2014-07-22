@@ -70,6 +70,8 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
 
     private EventReceiver registerDynamicRefreshEvent;
 
+    private EventReceiver switchBetweenPageEvent;
+
     /**
      * DOC yyin DynamicAnalysisMasterPage constructor comment.
      * 
@@ -245,8 +247,7 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
                 int index = 0;
                 for (Indicator oneIndicator : oneCategoryIndicatorModel.getIndicatorList()) {
                     // if the indicator is a frequency indicator, create a Frequency Event Receiver
-
-                    DynamicChartEventReceiver eReceiver = createEventReceiver(oneCategoryIndicatorModel, index, oneIndicator);
+                    DynamicChartEventReceiver eReceiver = createEventReceiver(oneCategoryIndicatorModel, index++, oneIndicator);
                     eReceiver.setChartComposite(chartComposite);
                     registerIndicatorEvent(oneIndicator, eReceiver);
                 }
@@ -254,7 +255,7 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
         }
         reLayoutChartComposite();
 
-        registerRefreshDynamicChartEvent();
+        registerOtherDynamicEvent();
     }
 
     /**
@@ -268,7 +269,7 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
      */
     protected DynamicChartEventReceiver createEventReceiver(DynamicIndicatorModel indicatorModel, int index,
             Indicator oneIndicator) {
-        return AnalysisUtils.createDynamicChartEventReceiver(indicatorModel, index++, oneIndicator);
+        return AnalysisUtils.createDynamicChartEventReceiver(indicatorModel, index, oneIndicator);
     }
 
     private void registerIndicatorEvent(Indicator oneIndicator, DynamicChartEventReceiver eReceiver) {
@@ -284,7 +285,7 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
     /**
      * refresh the composite of the chart, to show the changes on the chart.
      */
-    private void registerRefreshDynamicChartEvent() {
+    private void registerOtherDynamicEvent() {
         registerDynamicRefreshEvent = new EventReceiver() {
 
             @Override
@@ -295,6 +296,25 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
         };
         EventManager.getInstance().register(chartComposite, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART,
                 registerDynamicRefreshEvent);
+
+        // register a event to handle switch between master and result page
+        switchBetweenPageEvent = new EventReceiver() {
+
+            int times = 0;
+
+            @Override
+            public boolean handle(Object data) {
+                // only need to refresh for the first time switch, and must be during a running.
+                if (times == 0) {
+                    times++;
+                    currentEditor.getResultPage().refresh(currentEditor.getMasterPage());
+                }
+                return true;
+            }
+        };
+        EventManager.getInstance().register(this.getAnalysis(), EventEnum.DQ_DYNAMIC_SWITCH_MASTER_RESULT_PAGE,
+                switchBetweenPageEvent);
+
     }
 
     /**
@@ -303,6 +323,9 @@ public abstract class DynamicAnalysisMasterPage extends AbstractAnalysisMetadata
      * @param eventReceivers
      */
     public void unRegisterDynamicEvent() {
+        EventManager.getInstance().unRegister(this.getAnalysis(), EventEnum.DQ_DYNAMIC_SWITCH_MASTER_RESULT_PAGE,
+                switchBetweenPageEvent);
+
         for (Indicator oneIndicator : eventReceivers.keySet()) {
             DynamicChartEventReceiver eventReceiver = (DynamicChartEventReceiver) eventReceivers.get(oneIndicator);
             eventReceiver.clear();

@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.CategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.chart.TopChartFactory;
 import org.talend.dataprofiler.core.i18n.internal.DefaultMessagesImpl;
 import org.talend.dataprofiler.core.ui.editor.preview.IndicatorUnit;
@@ -66,7 +67,12 @@ public class SoundexFrequencyTableState extends FrequencyTypeStates {
 
     @Override
     public JFreeChart getChart() {
-        return TopChartFactory.createBarChart(DefaultMessagesImpl.getString("TopChartFactory.distinctCount"), getDataset());
+        return getChart(getDataset());
+    }
+
+    @Override
+    public JFreeChart getChart(CategoryDataset dataset) {
+        return TopChartFactory.createBarChart(DefaultMessagesImpl.getString("TopChartFactory.distinctCount"), dataset); //$NON-NLS-1$
     }
 
 }

@@ -249,6 +249,9 @@ public class AnalysisEditor extends CommonFormEditor {
         if (isRefreshResultPage) {
             resultPage.refresh(masterPage);
             isRefreshResultPage = false;
+        } else {
+            EventManager.getInstance().publish(masterPage.analysisItem.getAnalysis(),
+                    EventEnum.DQ_DYNAMIC_SWITCH_MASTER_RESULT_PAGE, null);
         }
     }
 

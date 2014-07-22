@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.CategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.ICustomerDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.chart.TopChartFactory;
@@ -41,6 +42,12 @@ public class SimpleStatisticsState extends AbstractChartTypeStates {
     public JFreeChart getChart() {
         return TopChartFactory.createBarChart(
                 DefaultMessagesImpl.getString("SimpleStatisticsState.SimpleStatistics"), getDataset(), false); //$NON-NLS-1$
+    }
+
+    @Override
+    public JFreeChart getChart(CategoryDataset dataset) {
+        return TopChartFactory.createBarChart(
+                DefaultMessagesImpl.getString("SimpleStatisticsState.SimpleStatistics"), dataset, false); //$NON-NLS-1$
     }
 
     public ICustomerDataset getCustomerDataset() {

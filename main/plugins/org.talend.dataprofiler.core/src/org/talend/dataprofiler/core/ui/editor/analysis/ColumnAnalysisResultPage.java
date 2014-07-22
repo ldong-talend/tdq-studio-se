@@ -63,6 +63,8 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
 
     private EventReceiver registerDynamicRefreshEvent;
 
+    private EventReceiver switchBetweenPageEvent;
+
     Composite chartTableComposite = null;
 
     private Composite chartComposite;
@@ -228,7 +230,7 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
         }
         reLayoutChartComposite();
 
-        registerRefreshDynamicChartEvent();
+        registerOtherDynamicEvent();
     }
 
     private void registerIndicatorEvent(Indicator oneIndicator, DynamicChartEventReceiver eReceiver) {
@@ -244,7 +246,7 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
     /**
      * refresh the composite of the chart, to show the changes on the chart.
      */
-    private void registerRefreshDynamicChartEvent() {
+    private void registerOtherDynamicEvent() {
         registerDynamicRefreshEvent = new EventReceiver() {
 
             @Override
@@ -255,6 +257,23 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
         };
         EventManager.getInstance().register(chartComposite, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART,
                 registerDynamicRefreshEvent);
+
+        // register a event to handle switch between master and result page
+        switchBetweenPageEvent = new EventReceiver() {
+
+            int times = 0;
+
+            @Override
+            public boolean handle(Object data) {
+                if (times == 0) {
+                    times++;
+                    masterPage.refresh();
+                }
+                return true;
+            }
+        };
+        EventManager.getInstance().register(masterPage.getAnalysis(), EventEnum.DQ_DYNAMIC_SWITCH_MASTER_RESULT_PAGE,
+                switchBetweenPageEvent);
     }
 
     /**
@@ -263,6 +282,9 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
      * @param eventReceivers
      */
     public void unRegisterDynamicEvent() {
+        EventManager.getInstance().unRegister(masterPage.getAnalysis(), EventEnum.DQ_DYNAMIC_SWITCH_MASTER_RESULT_PAGE,
+                switchBetweenPageEvent);
+
         for (Indicator oneIndicator : eventReceivers.keySet()) {
             DynamicChartEventReceiver eventReceiver = (DynamicChartEventReceiver) eventReceivers.get(oneIndicator);
             eventReceiver.clear();
@@ -276,8 +298,6 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
 
         masterPage.clearDynamicDatasets();
 
-        // TDQ-9173, need to refresh the summary part after each dynamic running
-        refreshSummaryContent();
     }
 
 }

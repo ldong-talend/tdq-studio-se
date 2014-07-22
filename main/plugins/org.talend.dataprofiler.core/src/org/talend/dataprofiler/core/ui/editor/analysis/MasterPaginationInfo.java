@@ -38,6 +38,10 @@ import org.talend.dataprofiler.core.ui.editor.preview.IndicatorUnit;
 import org.talend.dataprofiler.core.ui.editor.preview.model.ChartTypeStatesOperator;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates;
 import org.talend.dataprofiler.core.ui.editor.preview.model.states.SummaryStatisticsState;
+import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
+import org.talend.dataprofiler.core.ui.events.EventEnum;
+import org.talend.dataprofiler.core.ui.events.EventManager;
+import org.talend.dataprofiler.core.ui.events.IEventReceiver;
 import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
 import org.talend.dataprofiler.core.ui.utils.pagination.UIPagination;
 import org.talend.dataquality.indicators.Indicator;
@@ -135,7 +139,17 @@ public class MasterPaginationInfo extends IndicatorPaginationInfo {
      */
     private void createChart(Composite comp, EIndicatorChartType chartType, List<IndicatorUnit> units) {
         final IChartTypeStates chartTypeState = ChartTypeStatesOperator.getChartState(chartType, units);
-        JFreeChart chart = chartTypeState.getChart();
+        JFreeChart chart = null;
+        // MOD TDQ-8787 20140722 yyin:(when first switch from master to result) if there is some dynamic event for the
+        // current indicator, use its dataset directly (TDQ-9241)
+        IEventReceiver event = EventManager.getInstance().findRegisteredEvent(units.get(0).getIndicator(),
+                EventEnum.DQ_DYMANIC_CHART, 0);
+        if (event == null) {
+            chart = chartTypeState.getChart();
+        } else {
+            chart = chartTypeState.getChart(((DynamicChartEventReceiver) event).getDataset());
+        }// ~
+
         if (chart == null) {
             return;
         }

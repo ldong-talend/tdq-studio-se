@@ -18,6 +18,7 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.CategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.ICustomerDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.chart.TopChartFactory;
@@ -42,9 +43,13 @@ public class PatternStatisticsState extends AbstractChartTypeStates {
     }
 
     public JFreeChart getChart() {
-        return TopChartFactory
-                .createStackedBarChart(
-                        DefaultMessagesImpl.getString("PatternStatisticsState.PatternStatistics"), getDataset(), PlotOrientation.VERTICAL); //$NON-NLS-1$
+        return getChart(getDataset());
+    }
+
+    @Override
+    public JFreeChart getChart(CategoryDataset dataset) {
+        return TopChartFactory.createStackedBarChart(
+                DefaultMessagesImpl.getString("PatternStatisticsState.PatternStatistics"), dataset, PlotOrientation.VERTICAL); //$NON-NLS-1$
     }
 
     public ICustomerDataset getCustomerDataset() {

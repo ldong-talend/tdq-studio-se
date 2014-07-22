@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.CategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.ICustomerDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.chart.ChartDecorator;
@@ -41,9 +42,13 @@ public class TextStatisticsState extends AbstractChartTypeStates {
     }
 
     public JFreeChart getChart() {
+        return getChart(getDataset());
+    }
+
+    @Override
+    public JFreeChart getChart(CategoryDataset dataset) {
         JFreeChart barChart = TopChartFactory.createBarChart(
-                DefaultMessagesImpl.getString("TextStatisticsState.TextStatistics"), getDataset(), false); //$NON-NLS-1$ 
-        // add the decimal format :0.00,TDQ-8673 20140415 yyin
+                DefaultMessagesImpl.getString("TextStatisticsState.TextStatistics"), dataset, false); //$NON-NLS-1$ 
         ChartDecorator.setDisplayDecimalFormat(barChart);
         return barChart;
     }
@@ -103,6 +108,18 @@ public class TextStatisticsState extends AbstractChartTypeStates {
     }
 
     public String getReferenceLink() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates#getChart(org.talend.dataprofiler
+     * .common.ui.editor.preview.ICustomerDataset)
+     */
+    public JFreeChart getChart(ICustomerDataset dataset) {
         // TODO Auto-generated method stub
         return null;
     }

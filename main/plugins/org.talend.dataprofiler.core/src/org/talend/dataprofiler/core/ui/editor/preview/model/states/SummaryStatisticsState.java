@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.statistics.BoxAndWhiskerCategoryDataset;
 import org.jfree.data.statistics.BoxAndWhiskerItem;
 import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
@@ -123,7 +124,24 @@ public class SummaryStatisticsState extends AbstractChartTypeStates {
             } else {
                 JFreeChart barChart = TopChartFactory.createBarChart(
                         DefaultMessagesImpl.getString("SummaryStatisticsState.Summary_Statistics"), getDataset(), false); //$NON-NLS-1$
-                // add the decimal format :0.00,TDQ-8673 20140422 yyin
+                ChartDecorator.setDisplayDecimalFormat(barChart);
+                return barChart;
+            }
+        }
+    }
+
+    @Override
+    public JFreeChart getChart(CategoryDataset dataset) {
+        if (Java2SqlType.isDateInSQL(sqltype)) {
+            return null;
+        } else {
+            if (isIntact()) {
+                BoxAndWhiskerCategoryDataset dataset2 = (BoxAndWhiskerCategoryDataset) getDataset();
+                return TopChartFactory.createBoxAndWhiskerChart(
+                        DefaultMessagesImpl.getString("SummaryStatisticsState.SummaryStatistics"), dataset2); //$NON-NLS-1$
+            } else {
+                JFreeChart barChart = TopChartFactory.createBarChart(
+                        DefaultMessagesImpl.getString("SummaryStatisticsState.Summary_Statistics"), dataset, false); //$NON-NLS-1$
                 ChartDecorator.setDisplayDecimalFormat(barChart);
                 return barChart;
             }
@@ -235,5 +253,17 @@ public class SummaryStatisticsState extends AbstractChartTypeStates {
             url = "http://en.wikipedia.org/wiki/Histogram"; //$NON-NLS-1$
         }
         return url;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates#getChart(org.talend.dataprofiler
+     * .common.ui.editor.preview.ICustomerDataset)
+     */
+    public JFreeChart getChart(ICustomerDataset dataset) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -92,10 +92,10 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
         return null;
     }
 
-    private Long initRowCount(TableIndicator tableIndicator) {
+    private Long initRowCount(TableIndicator tableIndicator1) {
         Long result = 0L;
-        if (tableIndicator != null) {
-            TableIndicatorUnit[] tius = tableIndicator.getIndicatorUnits();
+        if (tableIndicator1 != null) {
+            TableIndicatorUnit[] tius = tableIndicator1.getIndicatorUnits();
             for (TableIndicatorUnit tiu : tius) {
                 if (tiu.getIndicator() instanceof RowCountIndicator) {
                     RowCountIndicator rci = (RowCountIndicator) tiu.getIndicator();
@@ -154,7 +154,7 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
     @Override
     public ICustomerDataset getCustomerXYDataset() {
         final CustomerXYSeriesCollection dataset = new CustomerXYSeriesCollection();
-        final XYSeries series = new XYSeries("Rules");
+        final XYSeries series = new XYSeries("Rules"); //$NON-NLS-1$
         int x = 0;
         for (TableIndicatorUnit unit : units) {
             x++;
@@ -318,12 +318,12 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
     /**
      * DOC xqliu Comment method "removeRowCountUnit".
      * 
-     * @param units
+     * @param units1
      * @return
      */
-    public List<TableIndicatorUnit> removeRowCountUnit(List<TableIndicatorUnit> units) {
+    public List<TableIndicatorUnit> removeRowCountUnit(List<TableIndicatorUnit> units1) {
         List<TableIndicatorUnit> result = new ArrayList<TableIndicatorUnit>();
-        for (TableIndicatorUnit tiu : units) {
+        for (TableIndicatorUnit tiu : units1) {
             if (!IndicatorEnum.RowCountIndicatorEnum.equals(tiu.getType())) {
                 result.add(tiu);
             }
@@ -334,11 +334,11 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
     /**
      * DOC xqliu Comment method "getRownCountUnit".
      * 
-     * @param units
+     * @param units1
      * @return
      */
-    public TableIndicatorUnit getRownCountUnit(List<TableIndicatorUnit> units) {
-        for (TableIndicatorUnit tiu : units) {
+    public TableIndicatorUnit getRownCountUnit(List<TableIndicatorUnit> units1) {
+        for (TableIndicatorUnit tiu : units1) {
             if (IndicatorEnum.RowCountIndicatorEnum.equals(tiu.getType())) {
                 return tiu;
             }
@@ -513,5 +513,17 @@ public class WhereRuleStatisticsStateTable extends AbstractChartTypeStatesTable 
             return result;
         }
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates#getChart(org.jfree.data.category
+     * .CategoryDataset)
+     */
+    public JFreeChart getChart(CategoryDataset dataset) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

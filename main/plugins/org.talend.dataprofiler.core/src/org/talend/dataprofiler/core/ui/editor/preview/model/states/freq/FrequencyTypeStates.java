@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.CategoryDataset;
 import org.talend.commons.utils.SpecialValueDisplay;
 import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.ICustomerDataset;
@@ -43,7 +44,12 @@ public abstract class FrequencyTypeStates extends AbstractChartTypeStates {
     }
 
     public JFreeChart getChart() {
-        return TopChartFactory.createBarChart(DefaultMessagesImpl.getString("TopChartFactory.count"), getDataset()); //$NON-NLS-1$
+        return getChart(getDataset());
+    }
+
+    @Override
+    public JFreeChart getChart(CategoryDataset dataset) {
+        return TopChartFactory.createBarChart(DefaultMessagesImpl.getString("TopChartFactory.count"), dataset); //$NON-NLS-1$
     }
 
     public ICustomerDataset getCustomerDataset() {

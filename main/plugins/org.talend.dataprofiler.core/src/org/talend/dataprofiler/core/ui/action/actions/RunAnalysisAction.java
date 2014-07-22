@@ -216,32 +216,34 @@ public class RunAnalysisAction extends Action implements ICheatSheetAction {
 
                     });
 
-                    ReturnCode executed = AnalysisExecutorSelector.executeAnalysis(item, monitor);
+                    ReturnCode executed = null;
+                    try {
+                        executed = AnalysisExecutorSelector.executeAnalysis(item, monitor);
 
-                    if (monitor.isCanceled()) {
-                        TdqAnalysisConnectionPool.closeConnectionPool(item.getAnalysis());
-                        executed = new ReturnCode(DefaultMessagesImpl.getString("RunAnalysisAction.TaskCancel"), false); //$NON-NLS-1$
+                        if (monitor.isCanceled()) {
+                            TdqAnalysisConnectionPool.closeConnectionPool(item.getAnalysis());
+                            executed = new ReturnCode(DefaultMessagesImpl.getString("RunAnalysisAction.TaskCancel"), false); //$NON-NLS-1$
+                            monitor.done();
+                            if (isNeedUnlock) {
+                                unlockAnalysis();
+                            }
+                            return Status.CANCEL_STATUS;
+                        }
+
                         monitor.done();
                         if (isNeedUnlock) {
                             unlockAnalysis();
                         }
-                        return Status.CANCEL_STATUS;
-                    }
+                    } finally {// if any exception, still need to unregister dynamic events.
+                        Display.getDefault().syncExec(new Runnable() {
 
-                    monitor.done();
-                    if (isNeedUnlock) {
-                        unlockAnalysis();
-                    }
-
-                    Display.getDefault().syncExec(new Runnable() {
-
-                        public void run() {
-                            // Added TDQ-8787 20140616 yyin: unregister all dynamic chart events after executing
-                            // the analysis
-                            if (isSupportDynamicChart()) {
-                                EventManager.getInstance().publish(item.getAnalysis(),
-                                        EventEnum.DQ_DYNAMIC_UNREGISTER_DYNAMIC_CHART, null);
-                            } else {
+                            public void run() {
+                                // Added TDQ-8787 20140616 yyin: unregister all dynamic chart events after executing
+                                // the analysis
+                                if (isSupportDynamicChart()) {
+                                    EventManager.getInstance().publish(item.getAnalysis(),
+                                            EventEnum.DQ_DYNAMIC_UNREGISTER_DYNAMIC_CHART, null);
+                                }
                                 if (listener != null) {
                                     listener.fireRuningItemChanged(true);
                                 } else {
@@ -249,11 +251,11 @@ public class RunAnalysisAction extends Action implements ICheatSheetAction {
                                     EventManager.getInstance().publish(item.getAnalysis(), EventEnum.DQ_ANALYSIS_RUN_FROM_MENU,
                                             null);
                                 }
+
                             }
-                        }
 
-                    });
-
+                        });
+                    }
                     displayResultStatus(executed);
 
                     return Status.OK_STATUS;

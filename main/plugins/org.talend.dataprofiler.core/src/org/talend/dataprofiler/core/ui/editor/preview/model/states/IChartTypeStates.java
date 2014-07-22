@@ -105,4 +105,12 @@ public interface IChartTypeStates {
      * @return
      */
     public List<JFreeChart> getChartList();
+
+    /**
+     * use an existed dataset to create a chart
+     * 
+     * @param dataset
+     * @return
+     */
+    public JFreeChart getChart(CategoryDataset dataset);
 }

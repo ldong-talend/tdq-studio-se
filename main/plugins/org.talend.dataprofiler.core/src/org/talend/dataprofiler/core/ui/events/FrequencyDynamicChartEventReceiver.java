@@ -72,8 +72,9 @@ public class FrequencyDynamicChartEventReceiver extends DynamicChartEventReceive
         }
 
         // need to refresh the parent composite of the chart to show the changes
-        EventManager.getInstance().publish(chartComposite, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART, null);
-
+        if (!(indicator instanceof ModeIndicator)) {
+            EventManager.getInstance().publish(chartComposite, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART, null);
+        }
         return true;
     }
 

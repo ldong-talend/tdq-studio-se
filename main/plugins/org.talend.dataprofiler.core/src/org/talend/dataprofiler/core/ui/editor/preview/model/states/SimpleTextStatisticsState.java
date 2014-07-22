@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.CategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.ICustomerDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.chart.TopChartFactory;
@@ -40,8 +41,13 @@ public class SimpleTextStatisticsState extends TextStatisticsState {
 
     @Override
     public JFreeChart getChart() {
+        return getChart(getDataset());
+    }
+
+    @Override
+    public JFreeChart getChart(CategoryDataset dataset) {
         JFreeChart chart = TopChartFactory.createBarChart(
-                DefaultMessagesImpl.getString("SimpleTextStatisticsState.SimpleTextStatistics"), getDataset(), false);//$NON-NLS-1$
+                DefaultMessagesImpl.getString("SimpleTextStatisticsState.SimpleTextStatistics"), dataset, false);//$NON-NLS-1$
         chart.getCategoryPlot().setOrientation(PlotOrientation.HORIZONTAL);
         return chart;
     }
