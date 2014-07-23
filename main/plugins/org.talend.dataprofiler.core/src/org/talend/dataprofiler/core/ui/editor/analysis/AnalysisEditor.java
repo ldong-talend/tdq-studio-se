@@ -250,6 +250,7 @@ public class AnalysisEditor extends CommonFormEditor {
             resultPage.refresh(masterPage);
             isRefreshResultPage = false;
         } else {
+            // Added TDQ-9241
             EventManager.getInstance().publish(masterPage.analysisItem.getAnalysis(),
                     EventEnum.DQ_DYNAMIC_SWITCH_MASTER_RESULT_PAGE, null);
         }

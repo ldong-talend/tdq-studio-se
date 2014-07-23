@@ -18,6 +18,7 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.CustomerDefaultCategoryDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.ICustomerDataset;
 import org.talend.dataprofiler.common.ui.editor.preview.chart.ChartDecorator;
@@ -106,6 +107,16 @@ public class SimpleStatisticsStateTable extends AbstractChartTypeStatesTable {
      * .CategoryDataset)
      */
     public JFreeChart getChart(CategoryDataset dataset) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.talend.dataprofiler.core.ui.editor.preview.model.states.IChartTypeStates#getChartList(java.util.List)
+     */
+    public List<JFreeChart> getChartList(List<DefaultCategoryDataset> datasets) {
         // TODO Auto-generated method stub
         return null;
     }

@@ -48,6 +48,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.entity.CategoryItemEntity;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.experimental.chart.swt.ChartComposite;
 import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.cwm.helper.SwitchHelpers;
@@ -72,6 +73,7 @@ import org.talend.dataprofiler.core.ui.events.DynamicChartEventReceiver;
 import org.talend.dataprofiler.core.ui.events.EventEnum;
 import org.talend.dataprofiler.core.ui.events.EventManager;
 import org.talend.dataprofiler.core.ui.events.EventReceiver;
+import org.talend.dataprofiler.core.ui.events.IEventReceiver;
 import org.talend.dataprofiler.core.ui.events.TableDynamicChartEventReceiver;
 import org.talend.dataprofiler.core.ui.pref.EditorPreferencePage;
 import org.talend.dataprofiler.core.ui.utils.AnalysisUtils;
@@ -108,6 +110,9 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
     private EventReceiver registerDynamicRefreshEvent;
 
     private Composite sectionClient;
+
+    // Added TDQ-9241
+    private EventReceiver switchBetweenPageEvent;
 
     /**
      * DOC xqliu TableAnalysisResultPage constructor comment.
@@ -293,13 +298,38 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
                                     chartTopComp.setLayoutData(new GridData(GridData.FILL_BOTH));
 
                                     if (!EditorPreferencePage.isHideGraphics()) {
+                                        // get all indicator lists separated by chart, and only
+                                        // WhereRuleStatisticsStateTable can get not-null charts
+                                        List<List<Indicator>> pagedIndicators = ((WhereRuleStatisticsStateTable) chartTypeState)
+                                                .getPagedIndicators();
+                                        // Added TDQ-9241: for each list(for each chart), check if the current
+                                        // list has been registered dynamic event
+                                        List<DefaultCategoryDataset> datasets = new ArrayList<DefaultCategoryDataset>();
+                                        for (List<Indicator> oneChart : pagedIndicators) {
+                                            IEventReceiver event = EventManager.getInstance().findRegisteredEvent(
+                                                    oneChart.get(0), EventEnum.DQ_DYMANIC_CHART, 0);
+                                            if (event != null) {
+                                                // get the dataset from the event
+                                                DefaultCategoryDataset dataset = ((TableDynamicChartEventReceiver) event)
+                                                        .getDataset();
+                                                // if there has the dataset for the current rule, use it to replace,
+                                                // (only happen when first switch from master to result page, during
+                                                // one running)
+                                                if (dataset != null) {
+                                                    datasets.add(dataset);
+                                                }
+
+                                            }// ~
+                                        }
                                         // create chart
-                                        List<JFreeChart> charts = chartTypeState.getChartList();
+                                        List<JFreeChart> charts = null;
+                                        if (datasets.size() > 0) {
+                                            charts = chartTypeState.getChartList(datasets);
+                                        } else {
+                                            charts = chartTypeState.getChartList();
+                                        }
                                         if (charts != null) {
-                                            // get all indicator lists separated by chart, and only
-                                            // WhereRuleStatisticsStateTable can get not-null charts
-                                            List<List<Indicator>> pagedIndicators = ((WhereRuleStatisticsStateTable) chartTypeState)
-                                                    .getPagedIndicators();
+
                                             int index = 0;
                                             for (JFreeChart chart2 : charts) {
 
@@ -528,6 +558,23 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
         };
         EventManager.getInstance().register(sectionClient, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART,
                 registerDynamicRefreshEvent);
+
+        // register a event to handle switch between master and result page
+        switchBetweenPageEvent = new EventReceiver() {
+
+            int times = 0;
+
+            @Override
+            public boolean handle(Object data) {
+                if (times == 0) {
+                    times++;
+                    masterPage.refresh();
+                }
+                return true;
+            }
+        };
+        EventManager.getInstance().register(masterPage.getAnalysis(), EventEnum.DQ_DYNAMIC_SWITCH_MASTER_RESULT_PAGE,
+                switchBetweenPageEvent);
     }
 
     /**
@@ -536,6 +583,10 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
      * @param eventReceivers
      */
     public void unRegisterDynamicEvent() {
+        // Added TDQ-9241
+        EventManager.getInstance().unRegister(masterPage.getAnalysis(), EventEnum.DQ_DYNAMIC_SWITCH_MASTER_RESULT_PAGE,
+                switchBetweenPageEvent);
+
         for (Indicator oneIndicator : eventReceivers.keySet()) {
             DynamicChartEventReceiver eventReceiver = (DynamicChartEventReceiver) eventReceivers.get(oneIndicator);
             eventReceiver.clear();
