@@ -39,7 +39,7 @@ public class BenfordFrequencyDynamicChartEventReceiver extends FrequencyDynamicC
         // the value of the bar
         customerdataset.addValue(freqExt.getFrequency(), "1", keyLabel); //$NON-NLS-1$
         // the value of the line
-        if (!BenfordLawFrequencyIndicatorImpl.INVALID.equals(keyLabel)) {
+        if (!BenfordLawFrequencyIndicatorImpl.INVALID.equals(keyLabel) && !"0".equals(keyLabel)) { //$NON-NLS-1$
             ((DefaultCategoryDataset) secondDataset).addValue(
                     BenfordLawFrequencyState.formalValues[Integer.valueOf(keyLabel) - 1], "Expected(%)", keyLabel);//$NON-NLS-1$
         } else {
