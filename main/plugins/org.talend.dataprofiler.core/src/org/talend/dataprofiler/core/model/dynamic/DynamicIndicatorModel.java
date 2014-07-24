@@ -158,10 +158,14 @@ public class DynamicIndicatorModel {
         this.indicatorList = null;
         this.tableViewer = null;
         this.bawParentChartComp = null;
+        this.summaryIndicators = null;
+        this.secondDataset = null;
+
     }
 
     /**
      * Getter for secondDataset.
+     * 
      * @return the secondDataset
      */
     public CategoryDataset getSecondDataset() {
@@ -170,6 +174,7 @@ public class DynamicIndicatorModel {
 
     /**
      * Sets the secondDataset.
+     * 
      * @param secondDataset the secondDataset to set
      */
     public void setSecondDataset(CategoryDataset secondDataset) {

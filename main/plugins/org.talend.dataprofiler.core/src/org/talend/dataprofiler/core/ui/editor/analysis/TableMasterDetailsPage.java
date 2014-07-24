@@ -107,8 +107,6 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
 
     private static Logger log = Logger.getLogger(TableMasterDetailsPage.class);
 
-    private String execLang = ExecutionLanguage.SQL.getLiteral();
-
     AnalysisTableTreeViewer treeViewer;
 
     TableAnalysisHandler analysisHandler;
@@ -138,6 +136,7 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
     public TableMasterDetailsPage(FormEditor editor, String id, String title) {
         super(editor, id, title);
         currentEditor = (AnalysisEditor) editor;
+        execLang = ExecutionLanguage.SQL.getLiteral();
     }
 
     public TableIndicator[] getCurrentTableIndicators() {
@@ -695,6 +694,9 @@ public class TableMasterDetailsPage extends DynamicAnalysisMasterPage implements
     @Override
     public void clearDynamicDatasets() {
         super.clearDynamicDatasets();
+        for (DynamicIndicatorModel dyModel : dynamicList) {
+            dyModel.clear();
+        }
         this.dynamicList.clear();
     }
 

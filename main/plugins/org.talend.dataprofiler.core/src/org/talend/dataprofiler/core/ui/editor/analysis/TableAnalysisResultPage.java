@@ -381,7 +381,7 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
 
     @Override
     public void setDirty(boolean isDirty) {
-
+        // no implementation
     }
 
     public void propertyChange(PropertyChangeEvent evt) {
@@ -398,13 +398,13 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
      * .ui.editor.analysis.AbstractAnalysisMetadataPage)
      */
     @Override
-    public void refresh(AbstractAnalysisMetadataPage masterPage) {
-        this.masterPage = (TableMasterDetailsPage) masterPage;
+    public void refresh(AbstractAnalysisMetadataPage masterPage1) {
+        this.masterPage = (TableMasterDetailsPage) masterPage1;
 
         disposeComposite();
 
         createFormContent(getManagedForm());
-        masterPage.refresh();
+        masterPage1.refresh();
 
     }
 
@@ -425,7 +425,6 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
     protected void addMouseListenerForChart(final ChartComposite chartComp, final IDataExplorer explorer, final Analysis analysis) {
         chartComp.addChartMouseListener(new ChartMouseListener() {
 
-            @SuppressWarnings("unchecked")
             public void chartMouseClicked(ChartMouseEvent event) {
                 boolean flag = event.getTrigger().getButton() != MouseEvent.BUTTON3;
 
@@ -463,7 +462,6 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
                         chartComp.setMenu(menu);
 
                         final Indicator currentIndicator = currentDataEntity.getIndicator();
-                        int createPatternFlag = 0;
                         MenuItemEntity[] itemEntities = ChartTableMenuGenerator.generate(explorer, analysis, currentDataEntity);
                         for (final MenuItemEntity itemEntity : itemEntities) {
                             MenuItem item = new MenuItem(menu, SWT.PUSH);
@@ -485,8 +483,6 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
                                     });
                                 }
                             });
-
-                            createPatternFlag++;
                         }
 
                         ChartTableFactory.addJobGenerationMenu(menu, analysis, currentIndicator);
@@ -497,7 +493,7 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
             }
 
             public void chartMouseMoved(ChartMouseEvent event) {
-
+                // no implementation
             }
 
         });
@@ -596,6 +592,9 @@ public class TableAnalysisResultPage extends AbstractAnalysisResultPage implemen
         EventManager.getInstance().unRegister(sectionClient, EventEnum.DQ_DYNAMIC_REFRESH_DYNAMIC_CHART,
                 registerDynamicRefreshEvent);
 
+        for (DynamicIndicatorModel dyModel : dynamicList) {
+            dyModel.clear();
+        }
         dynamicList.clear();
 
         masterPage.clearDynamicDatasets();

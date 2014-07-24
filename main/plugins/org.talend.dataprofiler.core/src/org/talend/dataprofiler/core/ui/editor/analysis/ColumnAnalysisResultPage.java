@@ -151,6 +151,7 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
      */
     @Override
     public void setDirty(boolean isDirty) {
+        // no implementation
     }
 
     /*
@@ -172,11 +173,11 @@ public class ColumnAnalysisResultPage extends AbstractAnalysisResultPage impleme
      * .ui.editor.analysis.AbstractAnalysisMetadataPage)
      */
     @Override
-    public void refresh(AbstractAnalysisMetadataPage masterPage) {
-        this.masterPage = (ColumnMasterDetailsPage) masterPage;
+    public void refresh(AbstractAnalysisMetadataPage masterPage1) {
+        this.masterPage = (ColumnMasterDetailsPage) masterPage1;
 
         disposeComposite();
-        masterPage.refresh();
+        masterPage1.refresh();
         createFormContent(getManagedForm());
     }
 
