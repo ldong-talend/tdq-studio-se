@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang.StringUtils;
 import org.talend.dataquality.record.linkage.attribute.AttributeMatcherFactory;
@@ -66,6 +67,11 @@ public abstract class AbstractRecordGrouping<TYPE> implements IRecordGrouping<TY
 
     private Boolean isDisplayAttLabels = Boolean.TRUE;
 
+    private Boolean isGIDStringType = Boolean.TRUE;
+
+    // old tMatchGroup GID using Long type
+    AtomicLong atomicLongGID = new AtomicLong();
+
     // The exthended column size.
     int extSize;
 
@@ -105,7 +111,7 @@ public abstract class AbstractRecordGrouping<TYPE> implements IRecordGrouping<TY
     }
 
     /**
-     * Sets the prevOrginalColumnSize.
+     * Set original input column size.except GID,MASTER,SCORE,GRP_SIZE,GRP_QUALITY,MATCHING_DISTANCES.
      * 
      * @param prevOrginalColumnSize the prevOrginalColumnSize to set
      */
@@ -131,6 +137,16 @@ public abstract class AbstractRecordGrouping<TYPE> implements IRecordGrouping<TY
     @Override
     public void setIsDisplayAttLabels(Boolean isDisplayAttLabels) {
         this.isDisplayAttLabels = isDisplayAttLabels;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * Set GID data type. if it is import form old version,the data type is Long. or else it is String .
+     */
+    public void setIsGIDStringType(Boolean isGIDStringType) {
+        this.isGIDStringType = isGIDStringType;
 
     }
 
@@ -227,7 +243,11 @@ public abstract class AbstractRecordGrouping<TYPE> implements IRecordGrouping<TY
             int extIdx = 0;
             if (!isLinkToPrevious) {
                 // GID
-                masterRow[masterRow.length - extSize] = getTYPEFromObject(UUID.randomUUID().toString());
+                if (this.isGIDStringType) {
+                    masterRow[masterRow.length - extSize] = getTYPEFromObject(UUID.randomUUID().toString());
+                } else {
+                    masterRow[masterRow.length - extSize] = getTYPEFromObject(atomicLongGID.incrementAndGet());
+                }
                 // Group size
                 masterRow[masterRow.length - extSize + 1] = getTYPEFromObject(1);
                 // Master
